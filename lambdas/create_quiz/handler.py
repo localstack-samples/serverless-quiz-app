@@ -39,7 +39,7 @@ class IdSentence:
             'boars', 'buffalos', 'bulls', 'bunnies', 'camels', 'cats',
             'chameleons', 'cheetahs', 'centaurs', 'chickens', 'chimpanzees',
             'chinchillas', 'chipmunks', 'cougars', 'cows', 'coyotes', 'cranes',
-            'crickets', 'crocodiles', 'deers', 'dinasaurs', 'dingos', 'dogs',
+            'crickets', 'crocodiles', 'deers', 'dinosaurs', 'dingos', 'dogs',
             'donkeys', 'dragons', 'elephants', 'elves', 'ferrets', 'flamingos',
             'foxes', 'frogs', 'gazelles', 'giraffes', 'gnomes', 'gnus', 'goats',
             'gophers', 'gorillas', 'hamsters', 'hedgehogs', 'hippopotamus',
@@ -81,7 +81,14 @@ def lambda_handler(event, context):
         visibility = quiz_data.get('Visibility', 'Private')
         if visibility not in ('Public', 'Private'):
             raise ValueError("Visibility must be 'Public' or 'Private'")
-    except (KeyError, json.JSONDecodeError, ValueError) as e:
+
+        enable_timer = quiz_data.get('EnableTimer', False)
+        timer_seconds = None
+        if enable_timer:
+            timer_seconds = int(quiz_data.get('TimerSeconds', 0))
+            if timer_seconds <= 0:
+                raise ValueError("TimerSeconds must be a positive integer")
+    except (KeyError, json.JSONDecodeError, ValueError, TypeError) as e:
         return {
             'statusCode': 400,
             'body': json.dumps({
@@ -108,6 +115,10 @@ def lambda_handler(event, context):
     quiz_id = f"{adjective}-{noun}-{verb}"
     quiz_data['QuizID'] = quiz_id
     quiz_data['Visibility'] = visibility
+    quiz_data['EnableTimer'] = enable_timer
+    if enable_timer:
+        quiz_data['TimerSeconds'] = timer_seconds
+
     try:
         table.put_item(Item=quiz_data)
     except Exception as e:

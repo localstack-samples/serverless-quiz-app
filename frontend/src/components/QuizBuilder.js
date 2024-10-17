@@ -16,12 +16,15 @@ import {
   Grid,
   Stack,
   Alert,
+  Switch,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 function QuizBuilder() {
   const [title, setTitle] = useState('');
   const [visibility, setVisibility] = useState('Public');
+  const [enableTimer, setEnableTimer] = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState(30);
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState({
     QuestionText: '',
@@ -68,9 +71,16 @@ function QuizBuilder() {
       return;
     }
 
+    if (enableTimer && (!timerSeconds || timerSeconds <= 0)) {
+      setErrorMessage('Please enter a valid number of seconds for the timer.');
+      return;
+    }
+
     const quizData = {
       Title: title,
       Visibility: visibility,
+      EnableTimer: enableTimer,
+      TimerSeconds: enableTimer ? timerSeconds : undefined,
       Questions: questions,
     };
 
@@ -151,6 +161,30 @@ function QuizBuilder() {
           <MenuItem value="Private">Private</MenuItem>
         </Select>
       </FormControl>
+
+      <FormControlLabel
+        control={
+          <Switch
+            checked={enableTimer}
+            onChange={(e) => setEnableTimer(e.target.checked)}
+            color="primary"
+          />
+        }
+        label="Enable Timer"
+        sx={{ marginTop: 2 }}
+      />
+
+      {enableTimer && (
+        <TextField
+          label="Timer Seconds per Question"
+          type="number"
+          fullWidth
+          margin="normal"
+          value={timerSeconds}
+          onChange={(e) => setTimerSeconds(parseInt(e.target.value, 10))}
+          inputProps={{ min: 1 }}
+        />
+      )}
 
       <Card variant="outlined" sx={{ marginTop: 4 }}>
         <CardContent>

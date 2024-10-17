@@ -12,7 +12,14 @@ def lambda_handler(event, context):
 
         if not username or not quiz_id or not answers:
             raise ValueError("Username, QuizID, and Answers are required.")
-    except (KeyError, json.JSONDecodeError, ValueError) as e:
+
+        for question_idx, answer_data in answers.items():
+            if 'Answer' not in answer_data or 'TimeTaken' not in answer_data:
+                raise ValueError(f"Answer for question {question_idx} must include 'Answer' and 'TimeTaken'")
+            time_taken = float(answer_data['TimeTaken'])
+            if time_taken < 0:
+                raise ValueError(f"TimeTaken for question {question_idx} must be non-negative")
+    except (KeyError, json.JSONDecodeError, ValueError, TypeError) as e:
         return {
             'statusCode': 400,
             'body': json.dumps({'message': 'Invalid input data', 'error': str(e)})
@@ -46,6 +53,7 @@ def lambda_handler(event, context):
 
     if email:
         message_body['Email'] = email
+
     try:
         sqs.send_message(
             QueueUrl=queue_url,

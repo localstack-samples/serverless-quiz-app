@@ -26,7 +26,7 @@ def lambda_handler(event, context):
         leaderboard = [
             {
                 'Username': item['Username'],
-                'Score': int(item['Score']),
+                'Score': float(item['Score']),
                 'SubmissionID': item['SubmissionID']
             } for item in items
         ]

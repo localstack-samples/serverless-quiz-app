@@ -1,8 +1,10 @@
 import json
 import boto3
-from decimal import Decimal
+from decimal import Decimal, getcontext
 
 def lambda_handler(event, context):
+    getcontext().prec = 6
+
     dynamodb = boto3.resource('dynamodb')
     quizzes_table = dynamodb.Table('Quizzes')
     submissions_table = dynamodb.Table('UserSubmissions')
@@ -30,17 +32,40 @@ def lambda_handler(event, context):
             correct_answers = [q['CorrectAnswer'] for q in quiz['Questions']]
             total_questions = len(correct_answers)
 
-            score = sum(
-                1 for idx, correct in enumerate(correct_answers)
-                if str(user_answers.get(str(idx))) == str(correct)
-            )
+            enable_timer = quiz.get('EnableTimer', False)
+            timer_seconds = quiz.get('TimerSeconds', None)
+
+            score = Decimal('0.0')
+            for idx, correct in enumerate(correct_answers):
+                question_idx = str(idx)
+                if question_idx in user_answers:
+                    user_answer_data = user_answers[question_idx]
+                    user_answer = user_answer_data['Answer']
+                    time_taken = Decimal(str(user_answer_data['TimeTaken']))
+                    if str(user_answer) == str(correct):
+                        if enable_timer and timer_seconds is not None:
+                            timer_seconds_decimal = Decimal(str(timer_seconds))
+                            if time_taken > timer_seconds_decimal:
+                                question_score = Decimal('0.0')
+                            else:
+                                max_score = Decimal('100.0')
+                                question_score = max_score * (Decimal('1.0') - (time_taken / timer_seconds_decimal))
+                                if question_score < Decimal('0.0'):
+                                    question_score = Decimal('0.0')
+                        else:
+                            question_score = Decimal('100.0')
+                        score += question_score
+                    else:
+                        pass
+                else:
+                    pass
 
             submissions_table.put_item(Item={
                 'SubmissionID': submission_id,
                 'Username': username,
                 'QuizID': quiz_id,
                 'UserAnswers': user_answers,
-                'Score': Decimal(score),
+                'Score': score,
                 'TotalQuestions': Decimal(total_questions)
             })
 
@@ -50,7 +75,7 @@ def lambda_handler(event, context):
                     'SubmissionID': submission_id,
                     'Username': username,
                     'Email': email,
-                    'Score': score,
+                    'Score': float(score),
                     'TotalQuestions': total_questions
                 }
 

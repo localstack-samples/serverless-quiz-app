@@ -8,6 +8,13 @@ import {
   CircularProgress,
   Box,
   Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from '@mui/material';
 
 function ResultPage() {
@@ -15,6 +22,7 @@ function ResultPage() {
   const navigate = useNavigate();
   const { submissionID, quizID } = state || {};
   const [resultData, setResultData] = useState(null);
+  const [quizData, setQuizData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const attemptsRef = useRef(0);
@@ -27,6 +35,17 @@ function ResultPage() {
       navigate('/');
       return;
     }
+
+    fetch(`${process.env.REACT_APP_API_ENDPOINT}/getquiz?quiz_id=${quizID}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setQuizData(data);
+      })
+      .catch((err) => {
+        console.error('Error fetching quiz data:', err);
+        setError('Failed to fetch quiz data. Please try again later.');
+        setLoading(false);
+      });
 
     const fetchResult = () => {
       fetch(`${process.env.REACT_APP_API_ENDPOINT}/getsubmission?submission_id=${submissionID}`)
@@ -68,7 +87,7 @@ function ResultPage() {
     navigate('/');
   };
 
-  if (loading) {
+  if (loading || !quizData) {
     return (
       <Container maxWidth="sm" sx={{ textAlign: 'center', marginTop: 8 }}>
         <CircularProgress />
@@ -93,17 +112,46 @@ function ResultPage() {
   }
 
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="md">
       <Box sx={{ textAlign: 'center', marginTop: 4 }}>
         <Typography variant="h4" gutterBottom>
           Quiz Results
         </Typography>
         <Typography variant="h6" gutterBottom>
-          Score: {resultData.Score} / {resultData.TotalQuestions}
+          Total Score: {resultData.Score}
         </Typography>
-        <Typography variant="body1" gutterBottom>
-          Submission ID: {resultData.SubmissionID}
-        </Typography>
+        {resultData.UserAnswers && quizData.Questions && (
+          <Box sx={{ marginTop: 4 }}>
+            <Typography variant="h5" gutterBottom>
+              Detailed Results
+            </Typography>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Question</TableCell>
+                    <TableCell>Your Answer</TableCell>
+                    <TableCell>Time Taken (s)</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {quizData.Questions.map((question, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{question.QuestionText}</TableCell>
+                      <TableCell>
+                        {resultData.UserAnswers[index]?.Answer || 'No Answer'}
+                      </TableCell>
+                      <TableCell>
+                        {resultData.UserAnswers[index]?.TimeTaken ?? 'N/A'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        )}
+
         <Box sx={{ marginTop: 4 }}>
           <Button
             variant="contained"
