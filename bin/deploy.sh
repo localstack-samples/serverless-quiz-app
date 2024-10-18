@@ -43,20 +43,6 @@ zip -j get_leaderboard_function.zip lambdas/get_leaderboard/handler.py
 zip -j list_quizzes_function.zip lambdas/list_quizzes/handler.py
 zip -j retry_quizzes_writes_function.zip lambdas/retry_quizzes_writes/handler.py
 
-# Create IAM trust policy for Lambda functions
-cat > lambda_trust_policy.json << EOL
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": { "Service": "lambda.amazonaws.com" },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOL
-
 # Function names and their policy files
 FUNCTIONS=(
   "CreateQuizFunction create_quiz_policy.json CreateQuizRole"
@@ -89,34 +75,6 @@ for FUNCTION_INFO in "${FUNCTIONS[@]}"; do
       --role-name ${ROLE_NAME} \
       --policy-arn arn:aws:iam::000000000000:policy/${FUNCTION_NAME}Policy
 done
-
-# Create IAM trust policy for State Machine
-cat > state_machine_trust_policy.json << EOL
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": { "Service": "states.amazonaws.com" },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOL
-
-# Create IAM policy for State Machine
-cat > state_machine_policy.json << EOL
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": ["ses:SendEmail", "ses:SendRawEmail", "sesv2:SendEmail"],
-      "Resource": "*"
-    }
-  ]
-}
-EOL
 
 # Create IAM Policy for State Machine
 awslocal iam create-policy \
@@ -400,43 +358,6 @@ awslocal sns subscribe \
     --topic-arn $SNS_TOPIC_ARN \
     --protocol email \
     --notification-endpoint your.email@example.com
-
-# Create IAM Role for EventBridge Pipe
-cat > pipe_role_trust_policy.json << EOL
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": { "Service": "pipes.amazonaws.com" },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOL
-
-cat > pipe_role_policy.json << EOL
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "sqs:ReceiveMessage",
-        "sqs:DeleteMessage",
-        "sqs:GetQueueAttributes",
-        "sqs:GetQueueUrl"
-      ],
-      "Resource": "$DLQ_ARN"
-    },
-    {
-      "Effect": "Allow",
-      "Action": "sns:Publish",
-      "Resource": "$SNS_TOPIC_ARN"
-    }
-  ]
-}
-EOL
 
 # Create IAM Role for Pipe
 awslocal iam create-role \
