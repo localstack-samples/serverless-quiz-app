@@ -56,9 +56,12 @@ jobs:
         run: |
           bash bin/deploy.sh
 
-      - name: Save Cloud Pod
-        run: |
-          localstack pod save serverless-quiz-app-ci
+      - name: Save the Cloud Pod 
+        uses: LocalStack/setup-localstack@v0.2.3
+        with:
+          state-backend: cloud-pods
+          state-name: serverless-quiz-app-ci
+          state-action: save
         env:
           LOCALSTACK_API_KEY: ${{ secrets.LOCALSTACK_API_KEY }}
 
@@ -131,6 +134,8 @@ jobs:
 
       - name: Load Cloud Pod
         run: |
+          localstack --help
+          localstack pod --help
           localstack pod load serverless-quiz-app-ci
         env:
           LOCALSTACK_API_KEY: ${{ secrets.LOCALSTACK_API_KEY }}
