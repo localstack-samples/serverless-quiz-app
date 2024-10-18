@@ -1,0 +1,28 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": "dynamodb:PutItem",
+        "Resource": "arn:aws:dynamodb:us-east-1:000000000000:table/Quizzes"
+      },
+      {
+        "Effect": "Allow",
+        "Action": "sns:Publish",
+        "Resource": "arn:aws:sns:us-east-1:000000000000:QuizzesWriteFailures"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource": [
+          "arn:aws:logs:us-east-1:000000000000:log-group:/aws/lambda/CreateQuizFunction:*",
+          "arn:aws:logs:us-east-1:000000000000:log-group:/aws/lambda/CreateQuizFunction:log-stream:*"
+        ]
+      }
+    ]
+  }
+  

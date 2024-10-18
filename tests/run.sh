@@ -78,7 +78,7 @@ curl -X POST "$API_ENDPOINT/submitquiz" \
 -d '{
     "Username": "user2",
     "Email": "user@example.com",
-    "QuizID": "flashy-hippopotamus-skipped",
+    "QuizID": "pretty-sloths-pranced",
     "Answers": {
         "0": {"Answer": "D. Paris", "TimeTaken": 7},
         "1": {"Answer": "B. Shakespeare", "TimeTaken": 6}

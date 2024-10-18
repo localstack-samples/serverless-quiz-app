@@ -1,0 +1,32 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": "dynamodb:GetItem",
+        "Resource": "arn:aws:dynamodb:us-east-1:000000000000:table/Quizzes"
+      },
+      {
+        "Effect": "Allow",
+        "Action": ["sqs:GetQueueUrl", "sqs:GetQueueAttributes"],
+        "Resource": "*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": "sqs:SendMessage",
+        "Resource": "arn:aws:sqs:us-east-1:000000000000:QuizSubmissionQueue"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource": [
+          "arn:aws:logs:us-east-1:000000000000:log-group:/aws/lambda/SubmitQuizFunction:*",
+          "arn:aws:logs:us-east-1:000000000000:log-group:/aws/lambda/SubmitQuizFunction:log-stream:*"
+        ]
+      }
+    ]
+  }

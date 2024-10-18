@@ -1,5 +1,7 @@
 #!/bin/bash
 
+
+# Create DynamoDB tables
 awslocal dynamodb create-table \
     --table-name Quizzes \
     --attribute-definitions AttributeName=QuizID,AttributeType=S \
@@ -31,6 +33,7 @@ awslocal dynamodb create-table \
 
 awslocal sqs create-queue --queue-name QuizSubmissionQueue
 
+# Zip Lambda functions
 zip -j get_quiz_function.zip lambdas/get_quiz/handler.py
 zip -j create_quiz_function.zip lambdas/create_quiz/handler.py
 zip -j submit_quiz_function.zip lambdas/submit_quiz/handler.py
@@ -40,17 +43,97 @@ zip -j get_leaderboard_function.zip lambdas/get_leaderboard/handler.py
 zip -j list_quizzes_function.zip lambdas/list_quizzes/handler.py
 zip -j retry_quizzes_writes_function.zip lambdas/retry_quizzes_writes/handler.py
 
-# Deploy Lambdas
+# Create IAM trust policy for Lambda functions
+cat > lambda_trust_policy.json << EOL
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "Service": "lambda.amazonaws.com" },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOL
 
-# GetQuizFunction
-awslocal lambda create-function \
-    --function-name GetQuizFunction \
-    --runtime python3.8 \
-    --handler handler.lambda_handler \
-    --zip-file fileb://get_quiz_function.zip \
-    --role arn:aws:iam::000000000000:role/DummyRole \
-    --timeout 30 \
-    --output text
+# Function names and their policy files
+FUNCTIONS=(
+  "CreateQuizFunction create_quiz_policy.json CreateQuizRole"
+  "GetQuizFunction get_quiz_policy.json GetQuizRole"
+  "SubmitQuizFunction submit_quiz_policy.json SubmitQuizRole"
+  "ScoringFunction scoring_policy.json ScoringRole"
+  "GetSubmissionFunction get_submission_policy.json GetSubmissionRole"
+  "GetLeaderboardFunction get_leaderboard_policy.json GetLeaderboardRole"
+  "ListPublicQuizzesFunction list_quizzes_policy.json ListQuizzesRole"
+  "RetryQuizzesWritesFunction retry_quizzes_writes_policy.json RetryQuizzesWritesRole"
+)
+
+# Create IAM policies and roles
+for FUNCTION_INFO in "${FUNCTIONS[@]}"; do
+  read FUNCTION_NAME POLICY_FILE ROLE_NAME <<< "$FUNCTION_INFO"
+  
+  # Create IAM Policy
+  awslocal iam create-policy \
+      --policy-name ${FUNCTION_NAME}Policy \
+      --policy-document file://${POLICY_FILE}
+  
+  # Create IAM Role
+  ROLE_ARN=$(awslocal iam create-role \
+      --role-name ${ROLE_NAME} \
+      --assume-role-policy-document file://lambda_trust_policy.json \
+      --query 'Role.Arn' --output text)
+  
+  # Attach Policy to Role
+  awslocal iam attach-role-policy \
+      --role-name ${ROLE_NAME} \
+      --policy-arn arn:aws:iam::000000000000:policy/${FUNCTION_NAME}Policy
+done
+
+# Create IAM trust policy for State Machine
+cat > state_machine_trust_policy.json << EOL
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "Service": "states.amazonaws.com" },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOL
+
+# Create IAM policy for State Machine
+cat > state_machine_policy.json << EOL
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["ses:SendEmail", "ses:SendRawEmail", "sesv2:SendEmail"],
+      "Resource": "*"
+    }
+  ]
+}
+EOL
+
+# Create IAM Policy for State Machine
+awslocal iam create-policy \
+    --policy-name SendEmailStateMachinePolicy \
+    --policy-document file://state_machine_policy.json
+
+# Create IAM Role for State Machine
+awslocal iam create-role \
+    --role-name SendEmailStateMachineRole \
+    --assume-role-policy-document file://state_machine_trust_policy.json
+
+# Attach Policy to Role
+awslocal iam attach-role-policy \
+    --role-name SendEmailStateMachineRole \
+    --policy-arn arn:aws:iam::000000000000:policy/SendEmailStateMachinePolicy
+
+# Deploy Lambdas
 
 # CreateQuizFunction
 awslocal lambda create-function \
@@ -58,7 +141,17 @@ awslocal lambda create-function \
     --runtime python3.8 \
     --handler handler.lambda_handler \
     --zip-file fileb://create_quiz_function.zip \
-    --role arn:aws:iam::000000000000:role/DummyRole \
+    --role arn:aws:iam::000000000000:role/CreateQuizRole \
+    --timeout 30 \
+    --output text
+
+# GetQuizFunction
+awslocal lambda create-function \
+    --function-name GetQuizFunction \
+    --runtime python3.8 \
+    --handler handler.lambda_handler \
+    --zip-file fileb://get_quiz_function.zip \
+    --role arn:aws:iam::000000000000:role/GetQuizRole \
     --timeout 30 \
     --output text
 
@@ -68,7 +161,7 @@ awslocal lambda create-function \
     --runtime python3.8 \
     --handler handler.lambda_handler \
     --zip-file fileb://submit_quiz_function.zip \
-    --role arn:aws:iam::000000000000:role/DummyRole \
+    --role arn:aws:iam::000000000000:role/SubmitQuizRole \
     --timeout 30 \
     --output text
 
@@ -78,7 +171,7 @@ awslocal lambda create-function \
     --runtime python3.8 \
     --handler handler.lambda_handler \
     --zip-file fileb://scoring_function.zip \
-    --role arn:aws:iam::000000000000:role/DummyRole \
+    --role arn:aws:iam::000000000000:role/ScoringRole \
     --timeout 30 \
     --output text
 
@@ -88,7 +181,7 @@ awslocal lambda create-function \
     --runtime python3.8 \
     --handler handler.lambda_handler \
     --zip-file fileb://get_submission_function.zip \
-    --role arn:aws:iam::000000000000:role/DummyRole \
+    --role arn:aws:iam::000000000000:role/GetSubmissionRole \
     --timeout 30 \
     --output text
 
@@ -98,27 +191,27 @@ awslocal lambda create-function \
     --runtime python3.8 \
     --handler handler.lambda_handler \
     --zip-file fileb://get_leaderboard_function.zip \
-    --role arn:aws:iam::000000000000:role/DummyRole \
+    --role arn:aws:iam::000000000000:role/GetLeaderboardRole \
     --timeout 30 \
     --output text
 
-# ListQuizzes Function
+# ListPublicQuizzesFunction
 awslocal lambda create-function \
     --function-name ListPublicQuizzesFunction \
     --runtime python3.8 \
     --handler handler.lambda_handler \
     --zip-file fileb://list_quizzes_function.zip \
-    --role arn:aws:iam::000000000000:role/DummyRole \
+    --role arn:aws:iam::000000000000:role/ListQuizzesRole \
     --timeout 30 \
     --output text
 
-# Retry Quiz Writes
+# RetryQuizzesWritesFunction
 awslocal lambda create-function \
     --function-name RetryQuizzesWritesFunction \
     --runtime python3.8 \
     --handler handler.lambda_handler \
     --zip-file fileb://retry_quizzes_writes_function.zip \
-    --role arn:aws:iam::000000000000:role/DummyRole \
+    --role arn:aws:iam::000000000000:role/RetryQuizzesWritesRole \
     --timeout 30 \
     --output text
 
@@ -291,6 +384,7 @@ SNS_TOPIC_ARN=$(awslocal sns create-topic --name DLQAlarmTopic --output json | j
 DLQ_URL=$(awslocal sqs create-queue --queue-name QuizSubmissionDLQ --output json | jq -r '.QueueUrl')
 DLQ_ARN=$(awslocal sqs get-queue-attributes --queue-url $DLQ_URL --attribute-names QueueArn --query 'Attributes.QueueArn' --output text)
 
+# Configure SQS Redrive Policy
 awslocal sqs set-queue-attributes \
     --queue-url $QUEUE_URL \
     --attributes '{
@@ -298,26 +392,79 @@ awslocal sqs set-queue-attributes \
         "VisibilityTimeout": "10"
     }'
 
+# Verify Email Identity for SES
 awslocal ses verify-email-identity --email your.email@example.com
 
+# Subscribe Email to SNS Topic
 awslocal sns subscribe \
     --topic-arn $SNS_TOPIC_ARN \
     --protocol email \
     --notification-endpoint your.email@example.com
 
+# Create IAM Role for EventBridge Pipe
+cat > pipe_role_trust_policy.json << EOL
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "Service": "pipes.amazonaws.com" },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOL
+
+cat > pipe_role_policy.json << EOL
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl"
+      ],
+      "Resource": "$DLQ_ARN"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "sns:Publish",
+      "Resource": "$SNS_TOPIC_ARN"
+    }
+  ]
+}
+EOL
+
+# Create IAM Role for Pipe
+awslocal iam create-role \
+    --role-name PipeRole \
+    --assume-role-policy-document file://pipe_role_trust_policy.json
+
+# Attach Policy to Role
+awslocal iam put-role-policy \
+    --role-name PipeRole \
+    --policy-name PipePolicy \
+    --policy-document file://pipe_role_policy.json
+
+# Create EventBridge Pipe
 awslocal pipes create-pipe \
   --name DLQToSNSPipe \
   --source $DLQ_ARN \
   --target $SNS_TOPIC_ARN \
-  --role-arn arn:aws:iam::000000000000:role/DummyRole
+  --role-arn arn:aws:iam::000000000000:role/PipeRole
 
+# Create State Machine
 awslocal stepfunctions create-state-machine \
     --name SendEmailStateMachine \
     --definition file://statemachine.json \
-    --role-arn arn:aws:iam::000000000000:role/DummyRole
+    --role-arn arn:aws:iam::000000000000:role/SendEmailStateMachineRole
 
 echo $API_ENDPOINT
 
+# Deploy Frontend
 pushd frontend
 npm install
 npm run build
@@ -326,12 +473,13 @@ awslocal s3 sync --delete ./build s3://webapp
 awslocal s3 website s3://webapp --index-document index.html --error-document index.html
 popd
 
+# Create CloudFront Distribution
 awslocal cloudfront create-distribution --distribution-config file://distribution-config.json --output text
 DISTRIBUTION=$(awslocal cloudfront create-distribution --distribution-config file://distribution-config.json)
 DOMAIN_NAME=$(echo "$DISTRIBUTION" | jq -r '.Distribution.DomainName')
 echo $DOMAIN_NAME
 
-# Chaos Setup
+# Setup Chaos Testing
 awslocal sns create-topic --name QuizzesWriteFailures --output json
 
 WRITE_FAILURES_QUEUE_URL=$(awslocal sqs create-queue --queue-name QuizzesWriteFailuresQueue --attributes VisibilityTimeout=60 --output json | jq -r '.QueueUrl')
@@ -350,5 +498,40 @@ awslocal lambda create-event-source-mapping \
     --enabled \
     --output text
 
-# Cleanup
-rm *.zip
+# API Gateway permissions
+
+API_NAME="QuizAPI"
+
+API_ID=$(awslocal apigateway get-rest-apis \
+  --query "items[?name=='$API_NAME'].id" \
+  --output text)
+
+awslocal lambda add-permission \
+    --function-name CreateQuizFunction \
+    --statement-id AllowAPIGatewayInvoke \
+    --action lambda:InvokeFunction \
+    --principal apigateway.amazonaws.com \
+    --source-arn "arn:aws:execute-api:us-east-1:000000000000:${API_ID}/*/POST/createquiz"
+
+awslocal lambda add-permission \
+    --function-name SubmitQuizFunction \
+    --statement-id AllowAPIGatewayInvoke \
+    --action lambda:InvokeFunction \
+    --principal apigateway.amazonaws.com \
+    --source-arn "arn:aws:execute-api:us-east-1:000000000000:${API_ID}/*/POST/submitquiz"
+
+# Doesn't work
+
+# awslocal lambda add-permission \
+#     --function-name GetQuizFunction \
+#     --statement-id AllowAPIGatewayInvoke \
+#     --action lambda:InvokeFunction \
+#     --principal apigateway.amazonaws.com \
+#     --source-arn "arn:aws:execute-api:us-east-1:000000000000:${API_ID}/*/GET/getquiz"
+
+# awslocal lambda add-permission \
+#     --function-name GetSubmissionFunction \
+#     --statement-id AllowAPIGatewayInvoke \
+#     --action lambda:InvokeFunction \
+#     --principal apigateway.amazonaws.com \
+#     --source-arn "arn:aws:execute-api:us-east-1:000000000000:${API_ID}/*/GET/getsubmission"
