@@ -58,7 +58,7 @@ curl -X GET "$API_ENDPOINT/listquizzes"
 
 # Get the quiz; Change the ID below
 
-curl -X GET "$API_ENDPOINT/getquiz?quiz_id=flashy-hippopotamus-skipped"
+curl -X GET "$API_ENDPOINT/getquiz?quiz_id=astonishing-dinosaurs-glided"
 
 # Submit responses
 
@@ -78,7 +78,7 @@ curl -X POST "$API_ENDPOINT/submitquiz" \
 -d '{
     "Username": "user2",
     "Email": "user@example.com",
-    "QuizID": "pretty-sloths-pranced",
+    "QuizID": "astonishing-dinosaurs-glided",
     "Answers": {
         "0": {"Answer": "D. Paris", "TimeTaken": 7},
         "1": {"Answer": "B. Shakespeare", "TimeTaken": 6}
@@ -102,7 +102,7 @@ curl -X GET "$API_ENDPOINT/getsubmission?submission_id=2c5cb81f-7b21-4ef0-a4a5-6
 
 # Get leaderboard
 
-curl -X GET "$API_ENDPOINT/getleaderboard?quiz_id=flashy-hippopotamus-skipped&top=3"
+curl -X GET "$API_ENDPOINT/getleaderboard?quiz_id=astonishing-dinosaurs-glided&top=3"
 
 # Check SES
 curl -s http://localhost.localstack.cloud:4566/_aws/ses

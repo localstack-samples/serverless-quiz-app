@@ -443,16 +443,38 @@ awslocal lambda add-permission \
 
 # Doesn't work
 
-# awslocal lambda add-permission \
-#     --function-name GetQuizFunction \
-#     --statement-id AllowAPIGatewayInvoke \
-#     --action lambda:InvokeFunction \
-#     --principal apigateway.amazonaws.com \
-#     --source-arn "arn:aws:execute-api:us-east-1:000000000000:${API_ID}/*/GET/getquiz"
+awslocal lambda add-permission \
+    --function-name GetQuizFunction \
+    --statement-id AllowAPIGatewayInvoke \
+    --action lambda:InvokeFunction \
+    --principal apigateway.amazonaws.com \
+    --source-arn "arn:aws:execute-api:us-east-1:000000000000:${API_ID}/*/GET/getquiz"
 
-# awslocal lambda add-permission \
-#     --function-name GetSubmissionFunction \
-#     --statement-id AllowAPIGatewayInvoke \
-#     --action lambda:InvokeFunction \
-#     --principal apigateway.amazonaws.com \
-#     --source-arn "arn:aws:execute-api:us-east-1:000000000000:${API_ID}/*/GET/getsubmission"
+awslocal lambda add-permission \
+    --function-name GetSubmissionFunction \
+    --statement-id AllowAPIGatewayInvoke \
+    --action lambda:InvokeFunction \
+    --principal apigateway.amazonaws.com \
+    --source-arn "arn:aws:execute-api:us-east-1:000000000000:${API_ID}/*/GET/getsubmission"
+
+awslocal lambda add-permission \
+    --function-name GetLeaderboardFunction \
+    --statement-id AllowAPIGatewayInvoke \
+    --action lambda:InvokeFunction \
+    --principal apigateway.amazonaws.com \
+    --source-arn "arn:aws:execute-api:us-east-1:000000000000:${API_ID}/*/GET/getleaderboard"
+
+awslocal lambda add-permission \
+    --function-name ListPublicQuizzesFunction \
+    --statement-id AllowAPIGatewayInvoke \
+    --action lambda:InvokeFunction \
+    --principal apigateway.amazonaws.com \
+    --source-arn "arn:aws:execute-api:us-east-1:000000000000:${API_ID}/*/GET/listquizzes"
+
+QUEUE_URL=$(awslocal sqs get-queue-url --queue-name QuizzesWriteFailuresQueue --output text --query QueueUrl)
+
+policy_json=$(cat sqs_queue_policy.json | jq -c . | jq -R .)
+
+awslocal sqs set-queue-attributes --queue-url "$QUEUE_URL" --attributes "{\"Policy\":$policy_json}"
+
+awslocal sqs get-queue-attributes --queue-url "$QUEUE_URL" --attribute-names All
