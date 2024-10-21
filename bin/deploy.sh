@@ -475,3 +475,7 @@ policy_json=$(cat configurations/sqs_queue_policy.json | jq -c . | jq -R .)
 awslocal sqs set-queue-attributes --queue-url "$QUEUE_URL" --attributes "{\"Policy\":$policy_json}"
 
 awslocal sqs get-queue-attributes --queue-url "$QUEUE_URL" --attribute-names All
+
+# Cleanup
+
+rm *.zip
