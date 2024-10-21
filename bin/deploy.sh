@@ -45,14 +45,14 @@ zip -j retry_quizzes_writes_function.zip lambdas/retry_quizzes_writes/handler.py
 
 # Function names and their policy files
 FUNCTIONS=(
-  "CreateQuizFunction create_quiz_policy.json CreateQuizRole"
-  "GetQuizFunction get_quiz_policy.json GetQuizRole"
-  "SubmitQuizFunction submit_quiz_policy.json SubmitQuizRole"
-  "ScoringFunction scoring_policy.json ScoringRole"
-  "GetSubmissionFunction get_submission_policy.json GetSubmissionRole"
-  "GetLeaderboardFunction get_leaderboard_policy.json GetLeaderboardRole"
-  "ListPublicQuizzesFunction list_quizzes_policy.json ListQuizzesRole"
-  "RetryQuizzesWritesFunction retry_quizzes_writes_policy.json RetryQuizzesWritesRole"
+  "CreateQuizFunction configurations/create_quiz_policy.json CreateQuizRole"
+  "GetQuizFunction configurations/get_quiz_policy.json GetQuizRole"
+  "SubmitQuizFunction configurations/submit_quiz_policy.json SubmitQuizRole"
+  "ScoringFunction configurations/scoring_policy.json ScoringRole"
+  "GetSubmissionFunction configurations/get_submission_policy.json GetSubmissionRole"
+  "GetLeaderboardFunction configurations/get_leaderboard_policy.json GetLeaderboardRole"
+  "ListPublicQuizzesFunction configurations/list_quizzes_policy.json ListQuizzesRole"
+  "RetryQuizzesWritesFunction configurations/retry_quizzes_writes_policy.json RetryQuizzesWritesRole"
 )
 
 # Create IAM policies and roles
@@ -67,7 +67,7 @@ for FUNCTION_INFO in "${FUNCTIONS[@]}"; do
   # Create IAM Role
   ROLE_ARN=$(awslocal iam create-role \
       --role-name ${ROLE_NAME} \
-      --assume-role-policy-document file://lambda_trust_policy.json \
+      --assume-role-policy-document file://configurations/lambda_trust_policy.json \
       --query 'Role.Arn' --output text)
   
   # Attach Policy to Role
@@ -79,12 +79,12 @@ done
 # Create IAM Policy for State Machine
 awslocal iam create-policy \
     --policy-name SendEmailStateMachinePolicy \
-    --policy-document file://state_machine_policy.json
+    --policy-document file://configurations/state_machine_policy.json
 
 # Create IAM Role for State Machine
 awslocal iam create-role \
     --role-name SendEmailStateMachineRole \
-    --assume-role-policy-document file://state_machine_trust_policy.json
+    --assume-role-policy-document file://configurations/state_machine_trust_policy.json
 
 # Attach Policy to Role
 awslocal iam attach-role-policy \
@@ -362,13 +362,13 @@ awslocal sns subscribe \
 # Create IAM Role for Pipe
 awslocal iam create-role \
     --role-name PipeRole \
-    --assume-role-policy-document file://pipe_role_trust_policy.json
+    --assume-role-policy-document file://configurations/pipe_role_trust_policy.json
 
 # Attach Policy to Role
 awslocal iam put-role-policy \
     --role-name PipeRole \
     --policy-name PipePolicy \
-    --policy-document file://pipe_role_policy.json
+    --policy-document file://configurations/pipe_role_policy.json
 
 # Create EventBridge Pipe
 awslocal pipes create-pipe \
@@ -380,7 +380,7 @@ awslocal pipes create-pipe \
 # Create State Machine
 awslocal stepfunctions create-state-machine \
     --name SendEmailStateMachine \
-    --definition file://statemachine.json \
+    --definition file://configurations/statemachine.json \
     --role-arn arn:aws:iam::000000000000:role/SendEmailStateMachineRole
 
 echo $API_ENDPOINT
@@ -395,8 +395,7 @@ awslocal s3 website s3://webapp --index-document index.html --error-document ind
 popd
 
 # Create CloudFront Distribution
-awslocal cloudfront create-distribution --distribution-config file://distribution-config.json --output text
-DISTRIBUTION=$(awslocal cloudfront create-distribution --distribution-config file://distribution-config.json)
+DISTRIBUTION=$(awslocal cloudfront create-distribution --distribution-config file://configurations/distribution-config.json)
 DOMAIN_NAME=$(echo "$DISTRIBUTION" | jq -r '.Distribution.DomainName')
 echo $DOMAIN_NAME
 
@@ -441,8 +440,6 @@ awslocal lambda add-permission \
     --principal apigateway.amazonaws.com \
     --source-arn "arn:aws:execute-api:us-east-1:000000000000:${API_ID}/*/POST/submitquiz"
 
-# Doesn't work
-
 awslocal lambda add-permission \
     --function-name GetQuizFunction \
     --statement-id AllowAPIGatewayInvoke \
@@ -473,7 +470,7 @@ awslocal lambda add-permission \
 
 QUEUE_URL=$(awslocal sqs get-queue-url --queue-name QuizzesWriteFailuresQueue --output text --query QueueUrl)
 
-policy_json=$(cat sqs_queue_policy.json | jq -c . | jq -R .)
+policy_json=$(cat configurations/sqs_queue_policy.json | jq -c . | jq -R .)
 
 awslocal sqs set-queue-attributes --queue-url "$QUEUE_URL" --attributes "{\"Policy\":$policy_json}"
 
