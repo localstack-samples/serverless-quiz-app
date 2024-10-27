@@ -1,4 +1,3 @@
-// ResultPage.js
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {

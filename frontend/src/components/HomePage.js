@@ -10,8 +10,10 @@ import {
   FormControl,
   Stack,
   Alert,
+  Box,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import QRCode from 'react-qr-code';
 
 function HomePage() {
   const [quizID, setQuizID] = useState('');
@@ -67,6 +69,9 @@ function HomePage() {
   const handleCreateQuiz = () => {
     navigate('/create-quiz');
   };
+
+  // Get the current page URL
+  const pageURL = window.location.href;
 
   return (
     <Container maxWidth="sm">
@@ -142,6 +147,21 @@ function HomePage() {
           Create a New Quiz
         </Button>
       </Stack>
+
+      <Box sx={{ marginTop: 4, textAlign: 'center' }}>
+        <Typography variant="h6" gutterBottom>
+          Share this Page
+        </Typography>
+        <Box
+          sx={{
+            background: 'white',
+            display: 'inline-block',
+            padding: '16px',
+          }}
+        >
+          <QRCode value={pageURL} size={128} />
+        </Box>
+      </Box>
     </Container>
   );
 }
