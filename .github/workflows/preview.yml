@@ -17,13 +17,14 @@ jobs:
         with:
           node-version: 20
       - name: LocalStack Preview
-        uses: LocalStack/setup-localstack@v0.2.2
+        uses: LocalStack/setup-localstack@v0.2.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           state-backend: ephemeral
           state-action: start
           include-preview: 'true'
           install-awslocal: 'true'
+          extension-auto-install: 'localstack-extension-mailhog'
           preview-cmd: |
             pip install awscli awscli-local
             bash bin/deploy.sh
