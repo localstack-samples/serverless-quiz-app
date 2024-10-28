@@ -11,6 +11,7 @@ import {
   CircularProgress,
   Alert,
   Paper,
+  Stack,
 } from '@mui/material';
 
 function LeaderboardPage() {
@@ -42,6 +43,20 @@ function LeaderboardPage() {
 
   const handleGoHome = () => {
     navigate('/');
+  };
+
+  const handleViewEmailDemo = () => {
+    let targetURL = '';
+    const hostname = window.location.hostname;
+
+    if (hostname.includes('localhost')) {
+      targetURL = `http://localhost:4566/_extension/mailhog/`;
+    } else {
+      const baseOrigin = window.location.origin;
+      targetURL = `${baseOrigin}/_extension/mailhog/`;
+    }
+
+    window.open(targetURL, '_blank');
   };
 
   if (loading) {
@@ -90,9 +105,14 @@ function LeaderboardPage() {
         )}
 
         <Box sx={{ marginTop: 4 }}>
-          <Button variant="contained" color="primary" onClick={handleGoHome}>
-            Go to Home
-          </Button>
+          <Stack spacing={2} direction="row" justifyContent="center">
+            <Button variant="contained" color="primary" onClick={handleGoHome}>
+              Go to Home
+            </Button>
+            <Button variant="contained" color="secondary" onClick={handleViewEmailDemo}>
+              View Email (Demo)
+            </Button>
+          </Stack>
         </Box>
       </Box>
     </Container>

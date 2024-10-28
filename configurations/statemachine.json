@@ -28,7 +28,7 @@
               },
               "Body": {
                 "Html": {
-                  "Data.$": "States.Format('<html><body><h2>Hello {}</h2><p>Congratulations on completing the quiz!</p><p><strong>Your Score:</strong> {}/{}.</p><p>Best regards,<br/>Quiz Team</p></body></html>', $.Username, $.Score, $.TotalQuestions)",
+                  "Data.$": "States.Format('<html><body><h2>Hello {}</h2><p>Congratulations on completing the quiz!</p><p><strong>Your Score:</strong> {}.</p><p>Best regards,<br/>LocalStack Team</p></body></html>', $.Username, $.Score)",
                   "Charset": "UTF-8"
                 }
               }
