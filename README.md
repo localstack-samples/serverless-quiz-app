@@ -1,6 +1,8 @@
 # Serverless Quiz App
 
-This project showcases a fully serverless quiz application designed to demonstrate LocalStack's capabilities in supporting local cloud development, debugging, and testing throughout the entire software development lifecycle (SDLC). The application enables users to create quizzes, participate by submitting answers, and view leaderboards for top scores. It leverages various LocalStack features to highlight the platform's capabilities, including:
+This project showcases a fully serverless quiz application designed to demonstrate LocalStack's capabilities in supporting local cloud development, debugging, and testing throughout the entire software development lifecycle (SDLC).
+The application enables users to create quizzes, participate by submitting answers, and view leaderboards for top scores.
+It leverages various LocalStack features to highlight the platform's capabilities, including:
 
 -   Emulating cloud environments locally with **Core Cloud Emulator**.
 -   Utilizing **Resource Browsers** for inspecting local resources.
@@ -29,12 +31,16 @@ The following resources are being deployed:
 -   **CloudFront**: Delivers frontend assets from S3 globally for fast user access.
 -   **S3**: Hosts static frontend assets in `webapp` bucket for CloudFront distribution.
 
+## Prerequisites
+
+Some of the features in this sample app require a LocalStack Pro license - make sure your Auth Token is configured in your terminal session.
+
 ## Start LocalStack
 
 Start your LocalStack container with the following configuration:
 
 ```bash
-EXTRA_CORS_ALLOWED_ORIGINS=* DISABLE_CUSTOM_CORS_APIGATEWAY=1 localstack start
+EXTRA_CORS_ALLOWED_ORIGINS='*' DISABLE_CUSTOM_CORS_APIGATEWAY=1 localstack start
 ```
 
 If you run into specific CORS issues, disable it using a [browser extension](https://webextension.org/listing/access-control.html).
