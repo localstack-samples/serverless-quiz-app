@@ -1,6 +1,7 @@
 import pytest
 import boto3
 import requests
+import localstack.sdk.aws
 import json
 import time
 
@@ -207,27 +208,26 @@ def test_quiz_workflow(api_endpoint):
 
         print(f"Verified submission for {submission['Username']} with Score: {actual_score}")
 
-    ses_endpoint = "http://localhost:4566/_aws/ses"
-    ses_response = requests.get(ses_endpoint)
-    assert ses_response.status_code == 200
-    ses_data = ses_response.json()
-
-    messages = ses_data.get('messages', [])
+    client = localstack.sdk.aws.AWSClient()
     sender_email = "sender@example.com"
+    messages = client.get_ses_messages(email_filter=sender_email)
+
     email_found = False
-
     for message in messages:
-        if message.get('Source') == sender_email:
+        if message.source == sender_email:
             email_found = True
-            assert 'Id' in message
-            assert 'Region' in message
-            assert 'Timestamp' in message
-            assert 'Destination' in message
-            assert 'Subject' in message
-            assert 'Body' in message
+            assert hasattr(message, 'id')
+            assert hasattr(message, 'region')
+            assert hasattr(message, 'timestamp')
+            assert hasattr(message, 'destination')
+            assert hasattr(message, 'subject')
+            assert hasattr(message, 'body')
 
-            body = message['Body']
-            assert 'html_part' in body
-            html_content = body['html_part']
+            body = message.body
+            assert hasattr(body, 'html_part')
+            html_content = body.html_part
+
+            # Optionally, add checks on the html_content if necessary
+            print(f"Email content: {html_content}")
 
     assert email_found, f"No email found sent from {sender_email}"
