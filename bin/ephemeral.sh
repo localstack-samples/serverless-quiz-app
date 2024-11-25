@@ -1,10 +1,5 @@
 #!/bin/bash
 
-if [ -z "$LOCALSTACK_API_KEY" ]; then
-  echo "Error: LOCALSTACK_API_KEY environment variable is not set."
-  exit 1
-fi
-
 INSTANCE_NAME="instance-$(openssl rand -hex 4)"
 echo "Creating ephemeral instance with name: $INSTANCE_NAME"
 
@@ -13,19 +8,19 @@ ENV_VARS_JSON=$(cat <<EOF
   "LAMBDA_KEEPALIVE_MS": "7200000",
   "EXTENSION_AUTO_INSTALL": "localstack-extension-mailhog",
   "DISABLE_CUSTOM_CORS_APIGATEWAY": "1",
-  "DISABLE_CUSTOM_CORS_S3": "1"
+  "DISABLE_CUSTOM_CORS_S3": "1",
 }
 EOF
 )
 
-CREATE_RESPONSE=$(curl -s -X POST https://api.localstack.cloud/v1/compute/instances \
-  -H "Content-Type: application/json" \
-  -H "ls-api-key: $LOCALSTACK_API_KEY" \
-  -d '{
-        "instance_name": "'"$INSTANCE_NAME"'",
-        "lifetime": 120,
-        "env_vars": '"$ENV_VARS_JSON"'
-      }')
+CREATE_RESPONSE=$(localstack ephemeral create \
+  --name "$INSTANCE_NAME" \
+  --lifetime 120 \
+  --env LAMBDA_KEEPALIVE_MS=7200000 \
+  --env EXTENSION_AUTO_INSTALL=localstack-extension-mailhog \
+  --env DISABLE_CUSTOM_CORS_APIGATEWAY=1 \
+  --env DISABLE_CUSTOM_CORS_S3=1
+)
 
 if echo "$CREATE_RESPONSE" | grep -q '"endpoint_url"'; then
   echo "Ephemeral instance created successfully."
