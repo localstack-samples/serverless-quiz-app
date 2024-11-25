@@ -56,7 +56,7 @@ The output will be:
 
 ```bash 
 CloudFront URL: https://1e372b81.cloudfront.localhost.localstack.cloud
-API Gateway Endpoint: http://localhost:4566/_aws/execute-api/4xu5emxibf/test/_user_request_
+API Gateway Endpoint: http://localhost:4566/_aws/execute-api/4xu5emxibf/test
 ```
 
 Navigate to the CloudFront URL to check out the app. The script would also seed some quiz data and user data to make local testing easier.

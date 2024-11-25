@@ -14,7 +14,7 @@ if [ -z "$API_ID" ]; then
   exit 1
 fi
 
-API_ENDPOINT="$AWS_ENDPOINT_URL/_aws/execute-api/$API_ID/test/_user_request_"
+API_ENDPOINT="$AWS_ENDPOINT_URL/_aws/execute-api/$API_ID/test"
 
 echo "REACT_APP_API_ENDPOINT=$API_ENDPOINT" > .env.local
 

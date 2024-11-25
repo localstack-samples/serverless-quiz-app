@@ -19,7 +19,7 @@ def api_endpoint():
         raise Exception(f"API {API_NAME} not found.")
 
     API_ID = api['id']
-    API_ENDPOINT = f"http://localhost:4566/_aws/execute-api/{API_ID}/test/_user_request_"
+    API_ENDPOINT = f"http://localhost:4566/_aws/execute-api/{API_ID}/test"
 
     print(f"API Endpoint: {API_ENDPOINT}")
 

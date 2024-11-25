@@ -25,14 +25,14 @@ if [ -z "$API_ID" ]; then
     exit 1
 fi
 
-API_ENDPOINT="$AWS_ENDPOINT_URL/_aws/execute-api/$API_ID/test/_user_request_"
+API_ENDPOINT="$AWS_ENDPOINT_URL/_aws/execute-api/$API_ID/test"
 
 create_quiz() {
     local quiz_data=$1
     local response=$(curl -s -X POST "$API_ENDPOINT/createquiz" \
         -H "Content-Type: application/json" \
         -d "$quiz_data")
-    
+
     if [ "$(echo $response | jq -r 'has("QuizID")')" = "true" ]; then
         local quiz_id=$(echo $response | jq -r '.QuizID')
         log "Created quiz with ID: $quiz_id"

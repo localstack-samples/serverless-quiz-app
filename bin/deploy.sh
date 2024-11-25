@@ -91,18 +91,18 @@ FUNCTIONS=(
 log "Creating IAM policies and roles for Lambda functions..."
 for FUNCTION_INFO in "${FUNCTIONS[@]}"; do
   read FUNCTION_NAME POLICY_FILE ROLE_NAME <<< "$FUNCTION_INFO"
-  
+
   log "Creating IAM policy for $FUNCTION_NAME..."
   awslocal iam create-policy \
       --policy-name ${FUNCTION_NAME}Policy \
       --policy-document file://${POLICY_FILE} >/dev/null
-  
+
   log "Creating IAM role $ROLE_NAME..."
   ROLE_ARN=$(awslocal iam create-role \
       --role-name ${ROLE_NAME} \
       --assume-role-policy-document file://configurations/lambda_trust_policy.json \
       --query 'Role.Arn' --output text)
-  
+
   log "Attaching policy to role $ROLE_NAME..."
   awslocal iam attach-role-policy \
       --role-name ${ROLE_NAME} \
@@ -141,7 +141,7 @@ LAMBDAS=(
 
 for LAMBDA_INFO in "${LAMBDAS[@]}"; do
   read FUNCTION_NAME ZIP_FILE ROLE_NAME <<< "$LAMBDA_INFO"
-  
+
   log "Creating Lambda function $FUNCTION_NAME..."
   awslocal lambda create-function \
       --function-name ${FUNCTION_NAME} \
@@ -190,21 +190,21 @@ ENDPOINTS=(
 
 for ENDPOINT_INFO in "${ENDPOINTS[@]}"; do
   read PATH_PART HTTP_METHOD FUNCTION_NAME <<< "$ENDPOINT_INFO"
-  
+
   log "Setting up API endpoint /$PATH_PART [$HTTP_METHOD] -> $FUNCTION_NAME"
-  
+
   RESOURCE_ID=$(awslocal apigateway create-resource \
       --rest-api-id $API_ID \
       --parent-id $PARENT_ID \
       --path-part $PATH_PART \
       --query 'id' --output text)
-  
+
   awslocal apigateway put-method \
       --rest-api-id $API_ID \
       --resource-id $RESOURCE_ID \
       --http-method $HTTP_METHOD \
       --authorization-type "NONE" >/dev/null
-  
+
   awslocal apigateway put-integration \
       --rest-api-id $API_ID \
       --resource-id $RESOURCE_ID \
@@ -220,7 +220,7 @@ log "Deploying API..."
 awslocal apigateway create-deployment \
     --rest-api-id $API_ID \
     --stage-name test >/dev/null
-API_ENDPOINT="http://localhost:4566/_aws/execute-api/$API_ID/test/_user_request_"
+API_ENDPOINT="http://localhost:4566/_aws/execute-api/$API_ID/test"
 log "API deployed. Endpoint: $API_ENDPOINT"
 
 # SQS DLQ -> EventBridge Pipes -> SNS
@@ -348,7 +348,7 @@ LAMBDA_PERMISSIONS=(
 
 for PERMISSION_INFO in "${LAMBDA_PERMISSIONS[@]}"; do
   read FUNCTION_NAME HTTP_METHOD PATH_PART <<< "$PERMISSION_INFO"
-  
+
   log "Adding permission for $FUNCTION_NAME to be invoked by API Gateway..."
   awslocal lambda add-permission \
       --function-name ${FUNCTION_NAME} \

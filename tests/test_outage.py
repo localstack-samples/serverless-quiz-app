@@ -28,7 +28,7 @@ def api_endpoint(apigateway_client):
         raise Exception(f"API {API_NAME} not found.")
 
     API_ID = api['id']
-    API_ENDPOINT = f"{LOCALSTACK_ENDPOINT}/_aws/execute-api/{API_ID}/test/_user_request_"
+    API_ENDPOINT = f"{LOCALSTACK_ENDPOINT}/_aws/execute-api/{API_ID}/test"
 
     print(f"API Endpoint: {API_ENDPOINT}")
 
@@ -38,11 +38,11 @@ def api_endpoint(apigateway_client):
 
 def test_dynamodb_outage(api_endpoint):
     outage_rule = FaultRule(region="us-east-1", service="dynamodb")
-    
+
     # Using fault_configuration context manager to apply and automatically clean up the fault rule
     with fault_configuration(fault_rules=[outage_rule]):
         print("DynamoDB outage initiated within context.")
-        
+
         # Attempt to create a quiz during the outage
         create_quiz_payload = {
             "Title": "Outage Test Quiz",
