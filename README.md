@@ -137,7 +137,7 @@ For testing the app within the GitHub Actions workflow, you can refer to the pro
 
 ## IAM Policy Stream
 
-Visit the [IAM Policy Stream](https://app.localstack.cloud/policy-stream) to view the permissions required for each API call. This feature enables you to explore and progressively enhance security as your application develops.
+Visit the [IAM Policy Stream](https://app.localstack.cloud/inst/default/policy-stream) to view the permissions required for each API call. This feature enables you to explore and progressively enhance security as your application develops.
 
 To get started, restart the LocalStack container using the command `localstack restart` and load the Cloud Pod. Then, click on **Enable**.
 
