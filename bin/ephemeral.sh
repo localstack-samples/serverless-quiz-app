@@ -3,16 +3,6 @@
 INSTANCE_NAME="instance-$(openssl rand -hex 4)"
 echo "Creating ephemeral instance with name: $INSTANCE_NAME"
 
-ENV_VARS_JSON=$(cat <<EOF
-{
-  "LAMBDA_KEEPALIVE_MS": "7200000",
-  "EXTENSION_AUTO_INSTALL": "localstack-extension-mailhog",
-  "DISABLE_CUSTOM_CORS_APIGATEWAY": "1",
-  "DISABLE_CUSTOM_CORS_S3": "1",
-}
-EOF
-)
-
 CREATE_RESPONSE=$(localstack ephemeral create \
   --name "$INSTANCE_NAME" \
   --lifetime 120 \
