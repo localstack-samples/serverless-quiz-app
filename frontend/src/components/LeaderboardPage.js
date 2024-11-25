@@ -105,7 +105,7 @@ function LeaderboardPage() {
                   marginRight: 'auto',
                 }}
               >
-                {leaderboardData[1].Username}
+                {leaderboardData[1]?.Username}
               </Typography>
               <div className="score">
                 <img
@@ -113,7 +113,7 @@ function LeaderboardPage() {
                   alt="Score"
                   style={{ float: 'left', marginLeft: '10px' }}
                 />
-                {leaderboardData[1].Score}
+                {leaderboardData[1]?.Score}
               </div>
             </div>
             <div className="podium first-place">
@@ -126,7 +126,7 @@ function LeaderboardPage() {
                   marginRight: 'auto',
                 }}
               >
-                {leaderboardData[0].Username}
+                {leaderboardData[0]?.Username}
               </Typography>
               <div className="score">
                 <img
@@ -134,7 +134,7 @@ function LeaderboardPage() {
                   alt="Score"
                   style={{ float: 'left', marginLeft: '10px' }}
                 />
-                {leaderboardData[0].Score}
+                {leaderboardData[0]?.Score}
               </div>
             </div>
             <div className="podium third-place">
@@ -147,7 +147,7 @@ function LeaderboardPage() {
                   marginRight: 'auto',
                 }}
               >
-                {leaderboardData[2].Username}
+                {leaderboardData[2]?.Username}
               </Typography>
               <div className="score">
                 <img
@@ -155,7 +155,7 @@ function LeaderboardPage() {
                   alt="Score"
                   style={{ float: 'left', marginLeft: '10px' }}
                 />
-                {leaderboardData[2].Score}
+                {leaderboardData[2]?.Score}
               </div>
             </div>
           </div>
