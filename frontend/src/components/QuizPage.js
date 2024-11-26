@@ -14,6 +14,7 @@ import {
   Alert,
   IconButton,
 } from '@mui/material';
+
 import CloseIcon from '@mui/icons-material/Close';
 import MainLayout from './QuizLayout';
 import Mascot1 from '../Mascot1.svg';
