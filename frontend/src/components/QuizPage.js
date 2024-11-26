@@ -29,6 +29,7 @@ function QuizPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const timerRef = useRef(null);
   const questionStartTimeRef = useRef(null);
+  const hasSubmittedRef = useRef(false); // New ref to track submission
 
   useEffect(() => {
     if (!quizID || !username) {
@@ -53,11 +54,15 @@ function QuizPage() {
   }, [quizID, username, navigate]);
 
   const handleSubmit = useCallback(() => {
+    if (hasSubmittedRef.current) return;
+    hasSubmittedRef.current = true;
+
     setIsSubmitting(true);
     const submissionData = {
       Username: username,
       QuizID: quizID,
       Answers: answers,
+      TimerExceeded: true, // Indicate that the timer has been exceeded
     };
     if (email) {
       submissionData.Email = email;
@@ -78,6 +83,7 @@ function QuizPage() {
         console.error('Error submitting quiz:', err);
         alert('Failed to submit quiz. Please try again.');
         setIsSubmitting(false);
+        hasSubmittedRef.current = false;
       });
   }, [username, quizID, answers, email, navigate]);
 
@@ -109,6 +115,9 @@ function QuizPage() {
         if (currentQuestionIndex < quizData.Questions.length - 1) {
           moveToNextQuestion();
         } else {
+          if (!hasSubmittedRef.current) {
+            handleSubmit();
+          }
         }
       };
 
@@ -125,7 +134,12 @@ function QuizPage() {
 
       return () => clearInterval(timerRef.current);
     }
-  }, [currentQuestionIndex, quizData, moveToNextQuestion]);
+  }, [
+    currentQuestionIndex,
+    quizData,
+    moveToNextQuestion,
+    handleSubmit,
+  ]);
 
   const handleOptionChange = (e) => {
     const selectedOption = e.target.value;
