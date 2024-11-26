@@ -1,56 +1,67 @@
 {
-    "StartAt": "CheckEmail",
-    "States": {
-      "CheckEmail": {
-        "Type": "Choice",
-        "Choices": [
-          {
-            "Variable": "$.Email",
-            "IsPresent": true,
-            "Next": "SendEmail"
-          }
-        ],
-        "Default": "NoEmailProvided"
-      },
-      "SendEmail": {
-        "Type": "Task",
-        "Resource": "arn:aws:states:::aws-sdk:sesv2:sendEmail",
-        "Parameters": {
-          "FromEmailAddress": "sender@example.com",
-          "Destination": {
-            "ToAddresses": ["$.Email"]
+  "QueryLanguage": "JSONata",
+  "StartAt": "CheckEmail",
+  "States": {
+    "CheckEmail": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $exists($states.input.Email) %}",
+          "Assign": {
+            "email": "{% $states.input.Email %}",
+            "username": "{% $states.input.Username %}",
+            "score": "{% $states.input.Score %}"
           },
-          "Content": {
-            "Simple": {
-              "Subject": {
-                "Data": "Your Quiz Results",
+          "Next": "SendEmail"
+        }
+      ],
+      "Default": "NoEmailProvided"
+    },
+    "SendEmail": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:sesv2:sendEmail",
+      "Arguments": {
+        "FromEmailAddress": "sender@example.com",
+        "Destination": {
+          "ToAddresses": [
+            "{% $email %}"
+          ]
+        },
+        "Content": {
+          "Simple": {
+            "Subject": {
+              "Data": "Your Quiz Results",
+              "Charset": "UTF-8"
+            },
+            "Body": {
+              "Html": {
+                "Data": "{% '<html><body><h2>Hello ' & $username & '</h2><p>Congratulations on completing the quiz!</p><p><strong>Your Score:</strong> ' & $score & '.</p><p>Best regards,<br/>LocalStack Team</p></body></html>' %}",
                 "Charset": "UTF-8"
-              },
-              "Body": {
-                "Html": {
-                  "Data.$": "States.Format('<html><body><h2>Hello {}</h2><p>Congratulations on completing the quiz!</p><p><strong>Your Score:</strong> {}.</p><p>Best regards,<br/>LocalStack Team</p></body></html>', $.Username, $.Score)",
-                  "Charset": "UTF-8"
-                }
               }
             }
           }
-        },
-        "End": true,
-        "Catch": [
-          {
-            "ErrorEquals": ["States.ALL"],
-            "Next": "EmailFailed"
-          }
-        ]
+        }
       },
-      "NoEmailProvided": {
-        "Type": "Succeed"
-      },
-      "EmailFailed": {
-        "Type": "Fail",
-        "Error": "EmailSendingFailed",
-        "Cause": "Failed to send email."
-      }
+      "End": true,
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Assign": {
+            "send_email_error": "{% $states.errorOutput %}"
+          },
+          "Next": "EmailFailed"
+        }
+      ]
+    },
+    "NoEmailProvided": {
+      "Type": "Succeed"
+    },
+    "EmailFailed": {
+      "Type": "Fail",
+      "Error": "EmailSendingFailed",
+      "Cause": "{% $string($send_email_error) %}"
     }
   }
-  
+}
