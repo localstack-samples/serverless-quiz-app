@@ -12,7 +12,9 @@ import {
   LinearProgress,
   Grid2 as Grid,
   Alert,
+  IconButton,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import MainLayout from './QuizLayout';
 import Mascot1 from '../Mascot1.svg';
 import Mascot2 from '../Mascot2.svg';
@@ -29,7 +31,7 @@ function QuizPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const timerRef = useRef(null);
   const questionStartTimeRef = useRef(null);
-  const hasSubmittedRef = useRef(false); // New ref to track submission
+  const hasSubmittedRef = useRef(false);
 
   useEffect(() => {
     if (!quizID || !username) {
@@ -53,45 +55,76 @@ function QuizPage() {
       });
   }, [quizID, username, navigate]);
 
-  const handleSubmit = useCallback(() => {
-    if (hasSubmittedRef.current) return;
-    hasSubmittedRef.current = true;
+  const handleSubmit = useCallback(
+    (timerExceeded = false) => {
+      if (hasSubmittedRef.current) return;
+      hasSubmittedRef.current = true;
 
-    setIsSubmitting(true);
-    const submissionData = {
-      Username: username,
-      QuizID: quizID,
-      Answers: answers,
-      TimerExceeded: true, // Indicate that the timer has been exceeded
-    };
-    if (email) {
-      submissionData.Email = email;
-    }
+      setIsSubmitting(true);
+      const submissionData = {
+        Username: username,
+        QuizID: quizID,
+        Answers: answers,
+      };
+      if (email) {
+        submissionData.Email = email;
+      }
+      if (timerExceeded) {
+        submissionData.TimerExceeded = true;
+      }
 
-    fetch(`${process.env.REACT_APP_API_ENDPOINT}/submitquiz`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(submissionData),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        navigate('/result', {
-          state: { submissionID: data.SubmissionID, quizID },
-        });
+      fetch(`${process.env.REACT_APP_API_ENDPOINT}/submitquiz`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData),
       })
-      .catch((err) => {
-        console.error('Error submitting quiz:', err);
-        alert('Failed to submit quiz. Please try again.');
-        setIsSubmitting(false);
-        hasSubmittedRef.current = false;
-      });
-  }, [username, quizID, answers, email, navigate]);
+        .then((res) => res.json())
+        .then((data) => {
+          navigate('/result', {
+            state: { submissionID: data.SubmissionID, quizID },
+          });
+        })
+        .catch((err) => {
+          console.error('Error submitting quiz:', err);
+          alert('Failed to submit quiz. Please try again.');
+          setIsSubmitting(false);
+          hasSubmittedRef.current = false;
+        });
+    },
+    [username, quizID, answers, email, navigate]
+  );
 
   const moveToNextQuestion = useCallback(() => {
     if (quizData && currentQuestionIndex < quizData.Questions.length - 1) {
       setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
     }
   }, [quizData, currentQuestionIndex]);
+
+  const handleSkip = () => {
+    const timeTaken =
+      quizData && quizData.EnableTimer ? quizData.TimerSeconds - timeLeft : 0;
+
+    setAnswers((prevAnswers) => ({
+      ...prevAnswers,
+      [currentQuestionIndex]: {
+        Answer: '',
+        TimeTaken: timeTaken,
+        Skipped: true,
+      },
+    }));
+
+    if (quizData && quizData.EnableTimer && timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    if (currentQuestionIndex < quizData.Questions.length - 1) {
+      moveToNextQuestion();
+    } else {
+      if (!hasSubmittedRef.current) {
+        handleSubmit();
+      }
+    }
+  };
 
   useEffect(() => {
     if (quizData && quizData.EnableTimer) {
@@ -116,7 +149,7 @@ function QuizPage() {
           moveToNextQuestion();
         } else {
           if (!hasSubmittedRef.current) {
-            handleSubmit();
+            handleSubmit(true);
           }
         }
       };
@@ -134,12 +167,7 @@ function QuizPage() {
 
       return () => clearInterval(timerRef.current);
     }
-  }, [
-    currentQuestionIndex,
-    quizData,
-    moveToNextQuestion,
-    handleSubmit,
-  ]);
+  }, [currentQuestionIndex, quizData, moveToNextQuestion, handleSubmit]);
 
   const handleOptionChange = (e) => {
     const selectedOption = e.target.value;
@@ -154,11 +182,16 @@ function QuizPage() {
       },
     }));
 
+    if (quizData && quizData.EnableTimer && timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
     if (currentQuestionIndex < quizData.Questions.length - 1) {
-      if (quizData && quizData.EnableTimer && timerRef.current) {
-        clearInterval(timerRef.current);
-      }
       moveToNextQuestion();
+    } else {
+      if (!hasSubmittedRef.current) {
+        handleSubmit();
+      }
     }
   };
 
@@ -182,7 +215,19 @@ function QuizPage() {
 
   return (
     <MainLayout>
-      <Container maxWidth="sm" className="main-quiz-container">
+      <Container maxWidth="sm" className="main-quiz-container" sx={{ position: 'relative' }}>
+        {/* Skip Button at Top Right */}
+        {!isSubmitting && (
+          <IconButton
+            onClick={handleSkip}
+            disabled={isSubmitting || isTimeUp}
+            sx={{ position: 'absolute', top: 8, right: 8 }}
+            aria-label="Skip"
+          >
+            <CloseIcon />
+          </IconButton>
+        )}
+
         <Typography variant="h6" gutterBottom align="left" width={'100%'}>
           Question {currentQuestionIndex + 1} / {quizData.Questions.length}
         </Typography>
@@ -241,6 +286,19 @@ function QuizPage() {
           ))}
         </RadioGroup>
 
+        {!isSubmitting && currentQuestionIndex === quizData.Questions.length - 1 && (
+          <Box sx={{ textAlign: 'center', marginTop: 4 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSubmit}
+              disabled={isSubmitting || isTimeUp}
+            >
+              Submit Quiz
+            </Button>
+          </Box>
+        )}
+
         {isSubmitting && (
           <Box sx={{ textAlign: 'center', marginTop: 4 }}>
             <CircularProgress />
@@ -249,24 +307,6 @@ function QuizPage() {
             </Typography>
           </Box>
         )}
-
-        {!isSubmitting &&
-          quizData &&
-          currentQuestionIndex === quizData.Questions.length - 1 && (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSubmit}
-              disabled={
-                Object.keys(answers).length !== quizData.Questions.length ||
-                isSubmitting ||
-                isTimeUp
-              }
-              sx={{ marginTop: 4 }}
-            >
-              Submit Quiz
-            </Button>
-          )}
       </Container>
       <div className="character-container">
         {currentQuestionIndex % 3 === 0 && (
