@@ -51,7 +51,7 @@ jobs:
           
           echo "NEW_URL=$NEW_URL" >> $GITHUB_ENV
         env:
-          LOCALSTACK_API_KEY: ${{ secrets.LOCALSTACK_API_KEY }}
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
 
       - name: Generate index.html with New Redirect URL
         run: |
