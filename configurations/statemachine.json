@@ -1,56 +1,56 @@
 {
-    "StartAt": "CheckEmail",
-    "States": {
-      "CheckEmail": {
-        "Type": "Choice",
-        "Choices": [
-          {
-            "Variable": "$.Email",
-            "IsPresent": true,
-            "Next": "SendEmail"
-          }
-        ],
-        "Default": "NoEmailProvided"
-      },
-      "SendEmail": {
-        "Type": "Task",
-        "Resource": "arn:aws:states:::aws-sdk:sesv2:sendEmail",
-        "Parameters": {
-          "FromEmailAddress": "sender@example.com",
-          "Destination": {
-            "ToAddresses": ["$.Email"]
-          },
-          "Content": {
-            "Simple": {
-              "Subject": {
-                "Data": "Your Quiz Results",
+  "StartAt": "CheckEmail",
+  "States": {
+    "CheckEmail": {
+      "Type": "Choice",
+      "QueryLanguage": "JSONata",
+      "Choices": [
+        {
+          "Condition": "{% $states.input.Email != null %}",
+          "Next": "SendEmail"
+        }
+      ],
+      "Default": "NoEmailProvided"
+    },
+    "SendEmail": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:sesv2:sendEmail",
+      "QueryLanguage": "JSONata",
+      "Arguments": {
+        "FromEmailAddress": "sender@example.com",
+        "Destination": {
+          "ToAddresses.$": "{% $states.input.Email %}"
+        },
+        "Content": {
+          "Simple": {
+            "Subject": {
+              "Data": "Your Quiz Results",
+              "Charset": "UTF-8"
+            },
+            "Body": {
+              "Html": {
+                "Data.$": "{% '<html><body><h2>Hello ' & $states.input.Username & '</h2><p>Congratulations on completing the quiz!</p><p><strong>Your Score:</strong> ' & $states.input.Score & '.</p><p>Best regards,<br/>LocalStack Team</p></body></html>' %}",
                 "Charset": "UTF-8"
-              },
-              "Body": {
-                "Html": {
-                  "Data.$": "States.Format('<html><body><h2>Hello {}</h2><p>Congratulations on completing the quiz!</p><p><strong>Your Score:</strong> {}.</p><p>Best regards,<br/>LocalStack Team</p></body></html>', $.Username, $.Score)",
-                  "Charset": "UTF-8"
-                }
               }
             }
           }
-        },
-        "End": true,
-        "Catch": [
-          {
-            "ErrorEquals": ["States.ALL"],
-            "Next": "EmailFailed"
-          }
-        ]
+        }
       },
-      "NoEmailProvided": {
-        "Type": "Succeed"
-      },
-      "EmailFailed": {
-        "Type": "Fail",
-        "Error": "EmailSendingFailed",
-        "Cause": "Failed to send email."
-      }
+      "End": true,
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "EmailFailed"
+        }
+      ]
+    },
+    "NoEmailProvided": {
+      "Type": "Succeed"
+    },
+    "EmailFailed": {
+      "Type": "Fail",
+      "Error": "EmailSendingFailed",
+      "Cause": "Failed to send email."
     }
   }
-  
+}
