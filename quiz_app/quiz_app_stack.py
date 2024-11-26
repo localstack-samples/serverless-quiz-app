@@ -60,37 +60,33 @@ class QuizAppStack(Stack):
             write_capacity=5,
         )
 
-        Output(self, "QuizTable", value=quizzes_table.table_name)
-        Output(self, "UserSubmissionsTable", value=user_submissions_table.table_name)
-
-
         functions_and_roles = [
-            ("CreateQuizFunction","configurations/create_quiz_policy.json","CreateQuizRole", "lambdas/get_quiz/handler.py"),
-            ("GetQuizFunction","configurations/get_quiz_policy.json","GetQuizRole", "lambdas/get_quiz/handler.py"),
-            ("SubmitQuizFunction","configurations/submit_quiz_policy.json", "SubmitQuizRole", "lambdas/submit_quiz/handler.py"),
-            ("ScoringFunction", "configurations/scoring_policy.json", "ScoringRole", "lambdas/scoring/handler.py"),
-            ("GetSubmissionFunction", "configurations/get_submission_policy.json", "GetSubmissionRole", "lambdas/get_submission/handler.py"),
-            ("GetLeaderboardFunction", "configurations/get_leaderboard_policy.json", "GetLeaderboardRole", "lambdas/get_leaderboard/handler.py"),
-            ("ListPublicQuizzesFunction", "configurations/list_quizzes_policy.json", "ListQuizzesRole", "lambdas/list_quizzes/handler.py"),
-            ("RetryQuizzesWritesFunction","configurations/retry_quizzes_writes_policy.json", "RetryQuizzesWritesRole", "lambdas/retry_quizzes_writes/handler.py"),
+            ("CreateQuizFunction","configurations/create_quiz_policy.json","CreateQuizRole", "lambdas/get_quiz"),
+            ("GetQuizFunction","configurations/get_quiz_policy.json","GetQuizRole", "lambdas/get_quiz"),
+            ("SubmitQuizFunction","configurations/submit_quiz_policy.json", "SubmitQuizRole", "lambdas/submit_quiz"),
+            ("ScoringFunction", "configurations/scoring_policy.json", "ScoringRole", "lambdas/scoring"),
+            ("GetSubmissionFunction", "configurations/get_submission_policy.json", "GetSubmissionRole", "lambdas/get_submission"),
+            ("GetLeaderboardFunction", "configurations/get_leaderboard_policy.json", "GetLeaderboardRole", "lambdas/get_leaderboard"),
+            ("ListPublicQuizzesFunction", "configurations/list_quizzes_policy.json", "ListQuizzesRole", "lambdas/list_quizzes"),
+            ("RetryQuizzesWritesFunction","configurations/retry_quizzes_writes_policy.json", "RetryQuizzesWritesRole", "lambdas/retry_quizzes_writes"),
         ]
 
         for function_info in functions_and_roles:
 
             function_name, policy_file_path,  role_name, handler_path = function_info
-            policy_json = self.read_policy_file(f"../{policy_file_path}")
+            policy_json = self.read_policy_file(f"./{policy_file_path}")
             policy_document = iam.PolicyDocument.from_json(policy_json)
 
             policy = iam.ManagedPolicy(
                 self,
-                "FunctionPolicy",
+                f"{function_name}FunctionPolicy",
                 managed_policy_name=f"{function_name}Policy",
                 document=policy_document,
             )
 
             role = iam.Role(
                 self,
-                "LambdaExecutionRole",
+                f"{function_name}LambdaExecutionRole",
                 role_name=role_name,
                 assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
                 description=f"Role for Lambda function {function_name}",
@@ -101,7 +97,7 @@ class QuizAppStack(Stack):
 
             _lambda.Function(
                 self,
-                "LambdaFunction",
+                f"{function_name}LambdaFunction",
                 function_name=function_name,
                 runtime=_lambda.Runtime.PYTHON_3_11,
                 handler="handler.lambda_handler",
@@ -110,7 +106,7 @@ class QuizAppStack(Stack):
                 timeout=aws_cdk.Duration.seconds(30),
             )
 
-        sqs.Queue(scope, "QuizSubmissionQueue", queue_name="QuizSubmissionQueue")
+        sqs.Queue(self, "QuizSubmissionQueue", queue_name="QuizSubmissionQueue")
 
     @staticmethod
     def read_policy_file(file_path: str) -> dict:
