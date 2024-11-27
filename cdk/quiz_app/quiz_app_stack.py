@@ -16,7 +16,7 @@ from aws_cdk import (
     custom_resources as cr,
     CfnOutput as Output,
 )
-from constructs import Construct
+from constructs import Construct, ConstructOrder
 
 
 class QuizAppStack(Stack):
@@ -64,7 +64,7 @@ class QuizAppStack(Stack):
             write_capacity=5,
         )
 
-        dlq_submission_queue = sqs.Queue(self, "QuizSubmissionQueueDLQ")
+        dlq_submission_queue = sqs.Queue(self, "QuizSubmissionDLQ")
         submission_queue = sqs.Queue(
             self,
             "QuizSubmissionQueue",
@@ -212,6 +212,48 @@ class QuizAppStack(Stack):
             aws_cdk.aws_sns_subscriptions.EmailSubscription(
                 email_address="your.email@example.com",
             )
+        )
+
+        # eventbridge pipe
+        policy_document = iam.PolicyDocument.from_json(
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "sqs:ReceiveMessage",
+                            "sqs:DeleteMessage",
+                            "sqs:GetQueueAttributes",
+                            "sqs:GetQueueUrl",
+                        ],
+                        "Resource": dlq_submission_queue.queue_arn,
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Action": "sns:Publish",
+                        "Resource": dlq_alarm_topic.topic_arn,
+                    },
+                ],
+            }
+        )
+        policy = iam.ManagedPolicy(
+            self,
+            "PipesPolicy",
+            document=policy_document,
+        )
+        pipes_role = iam.Role(
+            self,
+            f"PipeRole",
+            assumed_by=iam.ServicePrincipal("pipes.amazonaws.com"),
+            managed_policies=[policy],
+        )
+        pipe = pipes.CfnPipe(
+            self,
+            "DLQToSNSPipe",
+            source=dlq_submission_queue.queue_arn,
+            target=dlq_alarm_topic.topic_arn,
+            role_arn=pipes_role.role_arn,
         )
 
     @staticmethod
