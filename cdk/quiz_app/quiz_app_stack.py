@@ -6,11 +6,12 @@ import aws_cdk
 from aws_cdk import (
     # Duration,
     Stack,
-    aws_sqs as sqs,
-    aws_dynamodb as dynamodb,
     aws_apigateway as apigateway,
+    aws_dynamodb as dynamodb,
     aws_iam as iam,
     aws_lambda as _lambda,
+    aws_sns as sns,
+    aws_sqs as sqs,
     CfnOutput as Output,
 )
 from constructs import Construct
@@ -61,8 +62,15 @@ class QuizAppStack(Stack):
             write_capacity=5,
         )
 
+        dlq_submission_queue = sqs.Queue(self, "QuizSubmissionQueue")
         submission_queue = sqs.Queue(
-            self, "QuizSubmissionQueue", queue_name="QuizSubmissionQueue"
+            self,
+            "QuizSubmissionQueue",
+            queue_name="QuizSubmissionQueue",
+            dead_letter_queue=sqs.DeadLetterQueue(
+                max_receive_count=1, queue=dlq_submission_queue
+            ),
+            visibility_timeout=aws_cdk.Duration.seconds(10),
         )
         functions_and_roles = [
             (
@@ -175,6 +183,10 @@ class QuizAppStack(Stack):
                 functions[function_name], proxy=True
             )
             resource.add_method(http_method, integration=integration)
+
+        # SQS DLQ -> EventBridge Pipes -> SNS
+        dlq_alarm_topic = sns.Topic(self, "DLQAlarmTopic")
+
 
     @staticmethod
     def read_policy_file(file_path: str) -> dict:
