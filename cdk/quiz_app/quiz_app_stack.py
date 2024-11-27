@@ -11,12 +11,13 @@ from aws_cdk import (
     aws_iam as iam,
     aws_lambda as _lambda,
     aws_sns as sns,
+    aws_stepfunctions as sfn,
     aws_pipes as pipes,
     aws_sqs as sqs,
     custom_resources as cr,
     CfnOutput as Output,
 )
-from constructs import Construct, ConstructOrder
+from constructs import Construct
 
 
 class QuizAppStack(Stack):
@@ -254,6 +255,43 @@ class QuizAppStack(Stack):
             source=dlq_submission_queue.queue_arn,
             target=dlq_alarm_topic.topic_arn,
             role_arn=pipes_role.role_arn,
+        )
+
+        # state machine
+
+        policy_document = iam.PolicyDocument.from_json(
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "ses:SendEmail",
+                            "ses:SendRawEmail",
+                            "sesv2:SendEmail",
+                        ],
+                        "Resource": "*",
+                    }
+                ],
+            }
+        )
+        policy = iam.ManagedPolicy(
+            self, "SendEmailStateMachinePolicy", document=policy_document
+        )
+        state_machine_role = iam.Role(
+            self,
+            "SendEmailStateMachineRole",
+            assumed_by=iam.ServicePrincipal("states.amazonaws.com"),
+            managed_policies=[policy],
+        )
+
+        self.state_machine = sfn.StateMachine(
+            self,
+            "SendEmailStateMachine",
+            definition_body=sfn.DefinitionBody.from_file(
+                "../configurations/statemachine.json"
+            ),
+            role=state_machine_role,
         )
 
     @staticmethod
