@@ -74,7 +74,7 @@ class QuizAppStack(Stack):
         for function_info in functions_and_roles:
 
             function_name, policy_file_path,  role_name, handler_path = function_info
-            policy_json = self.read_policy_file(f"./{policy_file_path}")
+            policy_json = self.read_policy_file(f"../{policy_file_path}")
             policy_document = iam.PolicyDocument.from_json(policy_json)
 
             policy = iam.ManagedPolicy(
@@ -101,7 +101,7 @@ class QuizAppStack(Stack):
                 function_name=function_name,
                 runtime=_lambda.Runtime.PYTHON_3_11,
                 handler="handler.lambda_handler",
-                code=_lambda.Code.from_asset(handler_path),
+                code=_lambda.Code.from_asset(f"../{handler_path}"),
                 role=role,
                 timeout=aws_cdk.Duration.seconds(30),
             )
