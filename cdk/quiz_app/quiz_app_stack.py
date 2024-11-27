@@ -11,7 +11,9 @@ from aws_cdk import (
     aws_iam as iam,
     aws_lambda as _lambda,
     aws_sns as sns,
+    aws_pipes as pipes,
     aws_sqs as sqs,
+    custom_resources as cr,
     CfnOutput as Output,
 )
 from constructs import Construct
@@ -62,7 +64,7 @@ class QuizAppStack(Stack):
             write_capacity=5,
         )
 
-        dlq_submission_queue = sqs.Queue(self, "QuizSubmissionQueue")
+        dlq_submission_queue = sqs.Queue(self, "QuizSubmissionQueueDLQ")
         submission_queue = sqs.Queue(
             self,
             "QuizSubmissionQueue",
@@ -184,9 +186,33 @@ class QuizAppStack(Stack):
             )
             resource.add_method(http_method, integration=integration)
 
-        # SQS DLQ -> EventBridge Pipes -> SNS
-        dlq_alarm_topic = sns.Topic(self, "DLQAlarmTopic")
+        # verify email identity for SES
+        for email in ["your.email@example.com", "admin@localstack.cloud"]:
+            sanitised_email = email.replace(".", "-").replace("@", "-")
+            cr.AwsCustomResource(
+                self,
+                f"EmailVerifier{sanitised_email}",
+                on_update=cr.AwsSdkCall(
+                    service="SES",
+                    action="VerifyEmailIdentity",
+                    parameters={
+                        "EmailAddress": email,
+                    },
+                    physical_resource_id=cr.PhysicalResourceId.of(
+                        f"verify-{sanitised_email}"
+                    ),
+                ),
+                policy=cr.AwsCustomResourcePolicy.from_sdk_calls(
+                    resources=cr.AwsCustomResourcePolicy.ANY_RESOURCE,
+                ),
+            )
 
+        dlq_alarm_topic = sns.Topic(self, "DLQAlarmTopic")
+        dlq_alarm_topic.add_subscription(
+            aws_cdk.aws_sns_subscriptions.EmailSubscription(
+                email_address="your.email@example.com",
+            )
+        )
 
     @staticmethod
     def read_policy_file(file_path: str) -> dict:
