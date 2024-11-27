@@ -6,10 +6,13 @@ import aws_cdk
 from aws_cdk import (
     # Duration,
     Stack,
+    aws_s3 as s3,
     aws_apigateway as apigateway,
     aws_dynamodb as dynamodb,
+    aws_cloudfront as cf,
     aws_iam as iam,
     aws_lambda as _lambda,
+    aws_lambda_nodejs as _jslambda,
     aws_sns as sns,
     aws_stepfunctions as sfn,
     aws_pipes as pipes,
@@ -293,6 +296,28 @@ class QuizAppStack(Stack):
             ),
             role=state_machine_role,
         )
+
+        webapp_bucket = s3.Bucket(
+            self,
+            "WebAppBucket",
+            auto_delete_objects=True,
+            removal_policy=aws_cdk.RemovalPolicy.DESTROY,
+        )
+        origin_access_identity = cf.OriginAccessIdentity(self, "OriginAccessIdentity")
+        webapp_bucket.grant_read(origin_access_identity)
+        custom_resource_lambda = _lambda.Function(
+            self,
+            "WebsiteDeployFunction",
+            runtime=_lambda.Runtime.NODEJS_LATEST,
+            handler="index.handler",
+            memory_size=1024,
+            ephemeral_storage_size=aws_cdk.Size.gibibytes(8),
+            code=_lambda.Code.from_asset("./website_deploy"),
+            timeout=aws_cdk.Duration.seconds(300),
+            # TODO
+            environment={},
+        )
+        webapp_bucket.grant_write(custom_resource_lambda)
 
     @staticmethod
     def read_policy_file(file_path: str) -> dict:
