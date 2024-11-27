@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: '0 * * * *'
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -37,7 +40,8 @@ jobs:
           pip install awscli awscli-local
 
       - name: Run Ephemeral Script and Capture Output
-        run: |      
+        run: |
+          bash bin/ephemeral.sh
           OUTPUT=$(bash bin/ephemeral.sh 2>&1)
           echo "$OUTPUT"
           NEW_URL=$(echo "$OUTPUT" | grep -Eo 'https://ls-[^ ]+')
