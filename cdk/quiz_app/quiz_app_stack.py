@@ -8,6 +8,7 @@ from aws_cdk import (
     Stack,
     aws_sqs as sqs,
     aws_dynamodb as dynamodb,
+    aws_apigateway as apigateway,
     aws_iam as iam,
     aws_lambda as _lambda,
     CfnOutput as Output
@@ -71,6 +72,7 @@ class QuizAppStack(Stack):
             ("ListPublicQuizzesFunction", "configurations/list_quizzes_policy.json", "ListQuizzesRole", "lambdas/list_quizzes"),
             ("RetryQuizzesWritesFunction","configurations/retry_quizzes_writes_policy.json", "RetryQuizzesWritesRole", "lambdas/retry_quizzes_writes"),
         ]
+        functions = {}
 
         for function_info in functions_and_roles:
 
@@ -106,15 +108,31 @@ class QuizAppStack(Stack):
                 role=role,
                 timeout=aws_cdk.Duration.seconds(30),
             )
+            functions[function_name] = current_function
 
-            if function_name == "ScoringFunction":
-                submission_queue.grant_consume_messages(current_function)
-                _lambda.EventSourceMapping(
-                    self,
-                    "ScoringFunctionSubscription",
-                    target=current_function,
-                    event_source_arn=submission_queue.queue_arn,
-                )
+        submission_queue.grant_consume_messages(functions["ScoringFunction"])
+        _lambda.EventSourceMapping(
+            self,
+            "ScoringFunctionSubscription",
+            target=functions["ScoringFunction"],
+            event_source_arn=submission_queue.queue_arn,
+        )
+
+        # create rest api
+        rest_api = apigateway.RestApi(self, "QuizAPI")
+        endpoints = [
+            ("getquiz", "GET", "GetQuizFunction"),
+            ("createquiz", "POST", "CreateQuizFunction"),
+            ("submitquiz", "POST", "SubmitQuizFunction"),
+            ("getsubmission", "GET", "GetSubmissionFunction"),
+            ("getleaderboard", "GET", "GetLeaderboardFunction"),
+            ("listquizzes", "GET", "ListPublicQuizzesFunction"),
+        ]
+        for path_part, http_method, function_name in endpoints:
+            resource = rest_api.root.add_resource(path_part)
+            integration = apigateway.LambdaIntegration(functions[function_name], proxy=True)
+            resource.add_method(http_method, integration=integration)
+
 
 
     @staticmethod
