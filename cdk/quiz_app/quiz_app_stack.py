@@ -60,6 +60,7 @@ class QuizAppStack(Stack):
             write_capacity=5,
         )
 
+        submission_queue = sqs.Queue(self, "QuizSubmissionQueue", queue_name="QuizSubmissionQueue")
         functions_and_roles = [
             ("CreateQuizFunction","configurations/create_quiz_policy.json","CreateQuizRole", "lambdas/get_quiz"),
             ("GetQuizFunction","configurations/get_quiz_policy.json","GetQuizRole", "lambdas/get_quiz"),
@@ -95,7 +96,7 @@ class QuizAppStack(Stack):
             # Attach the policy to the role
             role.add_managed_policy(policy)
 
-            _lambda.Function(
+            current_function = _lambda.Function(
                 self,
                 f"{function_name}LambdaFunction",
                 function_name=function_name,
@@ -106,7 +107,15 @@ class QuizAppStack(Stack):
                 timeout=aws_cdk.Duration.seconds(30),
             )
 
-        sqs.Queue(self, "QuizSubmissionQueue", queue_name="QuizSubmissionQueue")
+            if function_name == "ScoringFunction":
+                submission_queue.grant_consume_messages(current_function)
+                _lambda.EventSourceMapping(
+                    self,
+                    "ScoringFunctionSubscription",
+                    target=current_function,
+                    event_source_arn=submission_queue.queue_arn,
+                )
+
 
     @staticmethod
     def read_policy_file(file_path: str) -> dict:
