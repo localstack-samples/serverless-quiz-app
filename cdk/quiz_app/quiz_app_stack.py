@@ -11,12 +11,12 @@ from aws_cdk import (
     aws_apigateway as apigateway,
     aws_iam as iam,
     aws_lambda as _lambda,
-    CfnOutput as Output
+    CfnOutput as Output,
 )
 from constructs import Construct
 
-class QuizAppStack(Stack):
 
+class QuizAppStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
@@ -61,22 +61,63 @@ class QuizAppStack(Stack):
             write_capacity=5,
         )
 
-        submission_queue = sqs.Queue(self, "QuizSubmissionQueue", queue_name="QuizSubmissionQueue")
+        submission_queue = sqs.Queue(
+            self, "QuizSubmissionQueue", queue_name="QuizSubmissionQueue"
+        )
         functions_and_roles = [
-            ("CreateQuizFunction","configurations/create_quiz_policy.json","CreateQuizRole", "lambdas/get_quiz"),
-            ("GetQuizFunction","configurations/get_quiz_policy.json","GetQuizRole", "lambdas/get_quiz"),
-            ("SubmitQuizFunction","configurations/submit_quiz_policy.json", "SubmitQuizRole", "lambdas/submit_quiz"),
-            ("ScoringFunction", "configurations/scoring_policy.json", "ScoringRole", "lambdas/scoring"),
-            ("GetSubmissionFunction", "configurations/get_submission_policy.json", "GetSubmissionRole", "lambdas/get_submission"),
-            ("GetLeaderboardFunction", "configurations/get_leaderboard_policy.json", "GetLeaderboardRole", "lambdas/get_leaderboard"),
-            ("ListPublicQuizzesFunction", "configurations/list_quizzes_policy.json", "ListQuizzesRole", "lambdas/list_quizzes"),
-            ("RetryQuizzesWritesFunction","configurations/retry_quizzes_writes_policy.json", "RetryQuizzesWritesRole", "lambdas/retry_quizzes_writes"),
+            (
+                "CreateQuizFunction",
+                "configurations/create_quiz_policy.json",
+                "CreateQuizRole",
+                "lambdas/get_quiz",
+            ),
+            (
+                "GetQuizFunction",
+                "configurations/get_quiz_policy.json",
+                "GetQuizRole",
+                "lambdas/get_quiz",
+            ),
+            (
+                "SubmitQuizFunction",
+                "configurations/submit_quiz_policy.json",
+                "SubmitQuizRole",
+                "lambdas/submit_quiz",
+            ),
+            (
+                "ScoringFunction",
+                "configurations/scoring_policy.json",
+                "ScoringRole",
+                "lambdas/scoring",
+            ),
+            (
+                "GetSubmissionFunction",
+                "configurations/get_submission_policy.json",
+                "GetSubmissionRole",
+                "lambdas/get_submission",
+            ),
+            (
+                "GetLeaderboardFunction",
+                "configurations/get_leaderboard_policy.json",
+                "GetLeaderboardRole",
+                "lambdas/get_leaderboard",
+            ),
+            (
+                "ListPublicQuizzesFunction",
+                "configurations/list_quizzes_policy.json",
+                "ListQuizzesRole",
+                "lambdas/list_quizzes",
+            ),
+            (
+                "RetryQuizzesWritesFunction",
+                "configurations/retry_quizzes_writes_policy.json",
+                "RetryQuizzesWritesRole",
+                "lambdas/retry_quizzes_writes",
+            ),
         ]
         functions = {}
 
         for function_info in functions_and_roles:
-
-            function_name, policy_file_path,  role_name, handler_path = function_info
+            function_name, policy_file_path, role_name, handler_path = function_info
             policy_json = self.read_policy_file(f"../{policy_file_path}")
             policy_document = iam.PolicyDocument.from_json(policy_json)
 
@@ -130,10 +171,10 @@ class QuizAppStack(Stack):
         ]
         for path_part, http_method, function_name in endpoints:
             resource = rest_api.root.add_resource(path_part)
-            integration = apigateway.LambdaIntegration(functions[function_name], proxy=True)
+            integration = apigateway.LambdaIntegration(
+                functions[function_name], proxy=True
+            )
             resource.add_method(http_method, integration=integration)
-
-
 
     @staticmethod
     def read_policy_file(file_path: str) -> dict:
