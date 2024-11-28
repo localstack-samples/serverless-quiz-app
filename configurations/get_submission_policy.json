@@ -1,0 +1,23 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": "dynamodb:GetItem",
+        "Resource": "arn:aws:dynamodb:us-east-1:000000000000:table/UserSubmissions"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource": [
+          "arn:aws:logs:us-east-1:000000000000:log-group:/aws/lambda/GetSubmissionFunction:*",
+          "arn:aws:logs:us-east-1:000000000000:log-group:/aws/lambda/GetSubmissionFunction:log-stream:*"
+        ]
+      }
+    ]
+  }
+  

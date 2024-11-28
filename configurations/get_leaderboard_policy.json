@@ -1,0 +1,25 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": "dynamodb:Query",
+        "Resource": [
+          "arn:aws:dynamodb:us-east-1:000000000000:table/UserSubmissions",
+          "arn:aws:dynamodb:us-east-1:000000000000:table/UserSubmissions/index/*"
+        ]
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource": [
+          "arn:aws:logs:us-east-1:000000000000:log-group:/aws/lambda/GetLeaderboardFunction:*",
+          "arn:aws:logs:us-east-1:000000000000:log-group:/aws/lambda/GetLeaderboardFunction:log-stream:*"
+        ]
+      }
+    ]
+  }
