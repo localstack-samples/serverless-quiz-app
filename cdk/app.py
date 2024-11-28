@@ -3,6 +3,7 @@ import os
 
 import aws_cdk as cdk
 
+from quiz_app.frontend_stack import FrontendStack
 from quiz_app.quiz_app_stack import QuizAppStack
 
 
@@ -24,5 +25,7 @@ QuizAppStack(app, "QuizAppStack",
 
     # For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
     )
+
+FrontendStack(app, "FrontendStack")
 
 app.synth()

@@ -1,29 +1,25 @@
 import json
 from pathlib import Path
-from tty import CFLAG
 
 import aws_cdk
 from aws_cdk import (
-    # Duration,
     Stack,
-    aws_s3 as s3,
     aws_apigateway as apigateway,
     aws_dynamodb as dynamodb,
-    aws_cloudfront as cf,
     aws_iam as iam,
     aws_lambda as _lambda,
-    aws_lambda_nodejs as _jslambda,
     aws_sns as sns,
     aws_stepfunctions as sfn,
     aws_pipes as pipes,
     aws_sqs as sqs,
     custom_resources as cr,
-    CfnOutput as Output,
 )
 from constructs import Construct
 
 
 class QuizAppStack(Stack):
+    backend_api_url: str
+
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
@@ -81,78 +77,41 @@ class QuizAppStack(Stack):
         functions_and_roles = [
             (
                 "CreateQuizFunction",
-                "configurations/create_quiz_policy.json",
-                "CreateQuizRole",
                 "lambdas/get_quiz",
             ),
             (
                 "GetQuizFunction",
-                "configurations/get_quiz_policy.json",
-                "GetQuizRole",
                 "lambdas/get_quiz",
             ),
             (
                 "SubmitQuizFunction",
-                "configurations/submit_quiz_policy.json",
-                "SubmitQuizRole",
                 "lambdas/submit_quiz",
             ),
             (
                 "ScoringFunction",
-                "configurations/scoring_policy.json",
-                "ScoringRole",
                 "lambdas/scoring",
             ),
             (
                 "GetSubmissionFunction",
-                "configurations/get_submission_policy.json",
-                "GetSubmissionRole",
                 "lambdas/get_submission",
             ),
             (
                 "GetLeaderboardFunction",
-                "configurations/get_leaderboard_policy.json",
-                "GetLeaderboardRole",
                 "lambdas/get_leaderboard",
             ),
             (
                 "ListPublicQuizzesFunction",
-                "configurations/list_quizzes_policy.json",
-                "ListQuizzesRole",
                 "lambdas/list_quizzes",
             ),
             (
                 "RetryQuizzesWritesFunction",
-                "configurations/retry_quizzes_writes_policy.json",
-                "RetryQuizzesWritesRole",
                 "lambdas/retry_quizzes_writes",
             ),
         ]
         functions = {}
 
         for function_info in functions_and_roles:
-            function_name, policy_file_path, role_name, handler_path = function_info
-            policy_json = self.read_policy_file(f"../{policy_file_path}")
-            policy_document = iam.PolicyDocument.from_json(policy_json)
-
-            policy = iam.ManagedPolicy(
-                self,
-                f"{function_name}FunctionPolicy",
-                managed_policy_name=f"{function_name}Policy",
-                document=policy_document,
-            )
-
-            role = iam.Role(
-                self,
-                f"{function_name}LambdaExecutionRole",
-                role_name=role_name,
-                assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
-                description=f"Role for Lambda function {function_name}",
-            )
-
-            # Attach the policy to the role
-            role.add_managed_policy(policy)
-
+            function_name, handler_path = function_info
             current_function = _lambda.Function(
                 self,
                 f"{function_name}LambdaFunction",
@@ -160,12 +119,10 @@ class QuizAppStack(Stack):
                 runtime=_lambda.Runtime.PYTHON_3_11,
                 handler="handler.lambda_handler",
                 code=_lambda.Code.from_asset(f"../{handler_path}"),
-                role=role,
                 timeout=aws_cdk.Duration.seconds(30),
             )
             functions[function_name] = current_function
 
-        submission_queue.grant_consume_messages(functions["ScoringFunction"])
         _lambda.EventSourceMapping(
             self,
             "ScoringFunctionSubscription",
@@ -189,6 +146,8 @@ class QuizAppStack(Stack):
                 functions[function_name], proxy=True
             )
             resource.add_method(http_method, integration=integration)
+
+        self.backend_api_url = rest_api.url
 
         # verify email identity for SES
         for email in ["your.email@example.com", "admin@localstack.cloud"]:
@@ -297,33 +256,18 @@ class QuizAppStack(Stack):
             role=state_machine_role,
         )
 
-        webapp_bucket = s3.Bucket(
-            self,
-            "WebAppBucket",
-            auto_delete_objects=True,
-            removal_policy=aws_cdk.RemovalPolicy.DESTROY,
-        )
-        origin_access_identity = cf.OriginAccessIdentity(self, "OriginAccessIdentity")
-        webapp_bucket.grant_read(origin_access_identity)
-        custom_resource_lambda = _lambda.Function(
-            self,
-            "WebsiteDeployFunction",
-            runtime=_lambda.Runtime.NODEJS_LATEST,
-            handler="index.handler",
-            memory_size=1024,
-            ephemeral_storage_size=aws_cdk.Size.gibibytes(8),
-            code=_lambda.Code.from_asset("./website_deploy"),
-            timeout=aws_cdk.Duration.seconds(300),
-            # TODO
-            environment={},
-        )
-        webapp_bucket.grant_write(custom_resource_lambda)
 
-    @staticmethod
-    def read_policy_file(file_path: str) -> dict:
-        """Reads a JSON policy file and returns it as a dictionary."""
-        file_path = Path(file_path)
-        if not file_path.exists():
-            raise FileNotFoundError(f"Policy file not found: {file_path}")
-        with open(file_path, "r") as file:
-            return json.load(file)
+        # set up lambda permissions
+        quizzes_table.grant_write_data(functions["CreateQuizFunction"])
+        # TODO: createquizfunction should be able to write to QuizzesWriteFailures
+        quizzes_table.grant_read_data(functions["GetQuizFunction"])
+        quizzes_table.grant_read_data(functions["SubmitQuizFunction"])
+        quizzes_table.grant_read_write_data(functions["ScoringFunction"])
+        self.state_machine.grant_start_execution(functions["ScoringFunction"])
+        submission_queue.grant_consume_messages(functions["ScoringFunction"])
+        user_submissions_table.grant_read_write_data(functions["ScoringFunction"])
+        user_submissions_table.grant_read_data(functions["GetSubmissionFunction"])
+        user_submissions_table.grant_read_data(functions["GetLeaderboardFunction"])
+        quizzes_table.grant_read_data(functions["ListPublicQuizzesFunction"])
+        quizzes_table.grant_read_write_data(functions["RetryQuizzesWritesFunction"])
+        # TODO: retryquizzeswritesfunction should have access to read and write to quizzeswritefailuresqueue
