@@ -1,6 +1,3 @@
-import json
-from pathlib import Path
-
 import aws_cdk
 from aws_cdk import (
     Stack,
@@ -131,7 +128,18 @@ class QuizAppStack(Stack):
         )
 
         # create rest api
-        rest_api = apigateway.RestApi(self, "QuizAPI")
+        # TODO: this is a circular dependency as we need to know the cloudfront
+        # domain name from the FrontendStack to add a specific origin, but the
+        # FrontendStack depends on the APIGW URL from this stack
+        rest_api = apigateway.RestApi(
+            self,
+            "QuizAPI",
+            default_cors_preflight_options=apigateway.CorsOptions(
+                allow_origins=apigateway.Cors.ALL_ORIGINS,
+                allow_methods=apigateway.Cors.ALL_METHODS,
+            ),
+        )
+
         endpoints = [
             ("getquiz", "GET", "GetQuizFunction"),
             ("createquiz", "POST", "CreateQuizFunction"),
@@ -255,7 +263,6 @@ class QuizAppStack(Stack):
             ),
             role=state_machine_role,
         )
-
 
         # set up lambda permissions
         quizzes_table.grant_write_data(functions["CreateQuizFunction"])
