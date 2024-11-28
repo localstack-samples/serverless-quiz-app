@@ -74,7 +74,7 @@ class QuizAppStack(Stack):
         functions_and_roles = [
             (
                 "CreateQuizFunction",
-                "lambdas/get_quiz",
+                "lambdas/create_quiz",
             ),
             (
                 "GetQuizFunction",
@@ -269,6 +269,7 @@ class QuizAppStack(Stack):
         # TODO: createquizfunction should be able to write to QuizzesWriteFailures
         quizzes_table.grant_read_data(functions["GetQuizFunction"])
         quizzes_table.grant_read_data(functions["SubmitQuizFunction"])
+        submission_queue.grant_send_messages(functions["SubmitQuizFunction"])
         quizzes_table.grant_read_write_data(functions["ScoringFunction"])
         self.state_machine.grant_start_execution(functions["ScoringFunction"])
         submission_queue.grant_consume_messages(functions["ScoringFunction"])
