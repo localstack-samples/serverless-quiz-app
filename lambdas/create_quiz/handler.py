@@ -91,6 +91,10 @@ def lambda_handler(event, context):
     except (KeyError, json.JSONDecodeError, ValueError, TypeError) as e:
         return {
             'statusCode': 400,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps({
                 'message': 'Invalid input data',
                 'error': str(e)
@@ -101,6 +105,10 @@ def lambda_handler(event, context):
         if not all(k in question for k in ('QuestionText', 'Options', 'CorrectAnswer', 'Trivia')):
             return {
                 'statusCode': 400,
+                'headers': {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': '*',
+                },
                 'body': json.dumps({
                     'message': 'Each question must contain QuestionText, Options, CorrectAnswer, and Trivia'
                 })
@@ -138,6 +146,10 @@ def lambda_handler(event, context):
             print(f"Failed to publish to SNS: {sns_e}")
         return {
             'statusCode': 500,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps({
                 'message': 'Error storing quiz data. It has been queued for retry.',
                 'error': str(e)
@@ -146,5 +158,9 @@ def lambda_handler(event, context):
 
     return {
         'statusCode': 200,
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': '*',
+        },
         'body': json.dumps({'QuizID': quiz_id})
     }

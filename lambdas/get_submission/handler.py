@@ -22,7 +22,11 @@ def lambda_handler(event, context):
     except (KeyError, TypeError) as e:
         return {
             'statusCode': 400,
-            'headers': {'Content-Type': 'application/json'},
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps({'message': 'submission_id is required', 'error': str(e)})
         }
 
@@ -36,12 +40,20 @@ def lambda_handler(event, context):
         submission = convert_decimal(submission)
         return {
             'statusCode': 200,
-            'headers': {'Content-Type': 'application/json'},
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps(submission)
         }
     else:
         return {
             'statusCode': 404,
-            'headers': {'Content-Type': 'application/json'},
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps({'message': 'Submission not found'})
         }

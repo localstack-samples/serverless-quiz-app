@@ -9,6 +9,10 @@ def lambda_handler(event, context):
     except (KeyError, TypeError, ValueError) as e:
         return {
             'statusCode': 400,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps({'message': 'quiz_id is required and top should be an integer', 'error': str(e)})
         }
 
@@ -32,10 +36,18 @@ def lambda_handler(event, context):
         ]
         return {
             'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps(leaderboard)
         }
     except Exception as e:
         return {
             'statusCode': 500,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps({'message': 'Error retrieving leaderboard', 'error': str(e)})
         }

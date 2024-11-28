@@ -21,6 +21,10 @@ def lambda_handler(event, context):
     except (KeyError, TypeError) as e:
         return {
             'statusCode': 400,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps({'message': 'quiz_id is required', 'error': str(e)})
         }
 
@@ -35,10 +39,18 @@ def lambda_handler(event, context):
         quiz = convert_decimal(quiz)
         return {
             'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps(quiz)
         }
     else:
         return {
             'statusCode': 404,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps({'message': 'Quiz not found'})
         }

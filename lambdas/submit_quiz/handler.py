@@ -22,6 +22,10 @@ def lambda_handler(event, context):
     except (KeyError, json.JSONDecodeError, ValueError, TypeError) as e:
         return {
             'statusCode': 400,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps({'message': 'Invalid input data', 'error': str(e)})
         }
 
@@ -33,11 +37,19 @@ def lambda_handler(event, context):
         if 'Item' not in response:
             return {
                 'statusCode': 400,
+                'headers': {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': '*',
+                },
                 'body': json.dumps({'message': f'QuizID "{quiz_id}" does not exist.'})
             }
     except Exception as e:
         return {
             'statusCode': 500,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps({'message': 'Error accessing the Quizzes table.', 'error': str(e)})
         }
 
@@ -62,10 +74,18 @@ def lambda_handler(event, context):
     except Exception as e:
         return {
             'statusCode': 500,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps({'message': 'Error sending message to SQS.', 'error': str(e)})
         }
 
     return {
         'statusCode': 200,
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': '*',
+        },
         'body': json.dumps({'message': 'Submission received', 'SubmissionID': message_body['SubmissionID']})
     }

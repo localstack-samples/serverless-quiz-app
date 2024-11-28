@@ -16,6 +16,10 @@ def lambda_handler(event, context):
 
         return {
             'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps({'Quizzes': quizzes})
         }
 
@@ -23,5 +27,9 @@ def lambda_handler(event, context):
         print(f"Error retrieving public quizzes: {e}")
         return {
             'statusCode': 500,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+            },
             'body': json.dumps({'message': 'Error retrieving public quizzes', 'error': str(e)})
         }
