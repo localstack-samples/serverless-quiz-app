@@ -17,7 +17,7 @@ fi
 
 # deploy bulk of the application
 (cd cdk
-npm run cdk -- deploy --require-approval never QuizAppStack
+npm run ${CDK_CMD} -- deploy --require-approval never QuizAppStack
 )
 
 # get the backend API url
