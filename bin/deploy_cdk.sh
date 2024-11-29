@@ -5,6 +5,16 @@ set -euo pipefail
 AWS_CMD=${AWS_CMD:-aws}
 CDK_CMD=${CDK_CMD:-cdk}
 
+# stub build the frontend code since the CDK stack needs this code to
+# synthesise the FrontendStack, but we don't yet know the backend URL to inject
+# into the static HTML
+if [ ! -d frontend/build ]; then
+    (cd frontend
+    echo "REACT_APP_API_ENDPOINT=https://example.com" > .env.local
+    npx react-scripts build
+    )
+fi
+
 # deploy bulk of the application
 (cd cdk
 npm run cdk -- deploy --require-approval never QuizAppStack
