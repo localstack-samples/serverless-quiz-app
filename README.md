@@ -46,6 +46,7 @@ EXTRA_CORS_ALLOWED_ORIGINS='*' DISABLE_CUSTOM_CORS_APIGATEWAY=1 DISABLE_CUSTOM_C
 If you run into specific CORS issues, disable it using a [browser extension](https://webextension.org/listing/access-control.html).
 
 ## Local Deployment
+### awslocal
 
 To deploy the app locally, run the following command:
 
@@ -60,6 +61,14 @@ API Gateway Endpoint: http://localhost:4566/_aws/execute-api/4xu5emxibf/test
 ```
 
 Navigate to the CloudFront URL to check out the app. The script would also seed some quiz data and user data to make local testing easier.
+
+### cdklocal
+
+Alternatively the application can be deployed to LocalStack via `cdklocal`, our wrapper around the AWS CDK. Perform the following steps:
+1. Bootstrap LocalStack: `cd cdk && cdklocal bootstrap`
+2. Deploy the application: `AWS_CMD=awslocal CDK_CMD=cdklocal bash ./bin/deploy_cdk.sh`
+
+_Note: while the core quiz application works with CDK, additional features have not been implemented yet._
 
 ## Local Testing
 
