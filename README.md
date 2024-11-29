@@ -62,6 +62,14 @@ API Gateway Endpoint: http://localhost:4566/_aws/execute-api/4xu5emxibf/test
 
 Navigate to the CloudFront URL to check out the app. The script would also seed some quiz data and user data to make local testing easier.
 
+### cdk
+
+To deploy the application to AWS, ensure your account is bootstraped via `cdk bootstrap` and then run
+
+```bash
+AWS_CMD=aws CDK_CMD=cdk bash ./bin/deploy_cdk.sh
+```
+
 ### cdklocal
 
 Alternatively the application can be deployed to LocalStack via `cdklocal`, our wrapper around the AWS CDK. Perform the following steps:
