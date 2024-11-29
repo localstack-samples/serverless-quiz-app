@@ -32,6 +32,7 @@ class QuizAppStack(Stack):
             billing_mode=dynamodb.BillingMode.PROVISIONED,
             read_capacity=5,
             write_capacity=5,
+            removal_policy=aws_cdk.RemovalPolicy.DESTROY,
         )
 
         user_submissions_table = dynamodb.Table(
@@ -45,6 +46,7 @@ class QuizAppStack(Stack):
             billing_mode=dynamodb.BillingMode.PROVISIONED,
             read_capacity=5,
             write_capacity=5,
+            removal_policy=aws_cdk.RemovalPolicy.DESTROY,
         )
         user_submissions_table.add_global_secondary_index(
             index_name="QuizID-Score-index",
