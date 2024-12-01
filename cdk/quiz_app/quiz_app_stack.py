@@ -69,7 +69,7 @@ class QuizAppStack(Stack):
             dead_letter_queue=sqs.DeadLetterQueue(
                 max_receive_count=1, queue=dlq_submission_queue
             ),
-            visibility_timeout=aws_cdk.Duration.seconds(10),
+            visibility_timeout=aws_cdk.Duration.minutes(1),
         )
         functions_and_roles = [
             (
