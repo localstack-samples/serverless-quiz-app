@@ -51,6 +51,12 @@ jobs:
           echo "REACT_APP_API_ENDPOINT=https://example.com" > .env.local
           npm i && npm run build
 
+      - name: Perform a dummy build of the frontend code
+        run: |
+          cd frontend
+          echo "REACT_APP_API_ENDPOINT=https://example.com" > .env.local
+          npx react-scripts build
+
       - name: Deploy using CDK
         run: |
           cd cdk
