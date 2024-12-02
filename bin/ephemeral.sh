@@ -9,6 +9,7 @@ CREATE_RESPONSE=$(localstack ephemeral create \
   --env LAMBDA_KEEPALIVE_MS=7200000 \
   --env EXTENSION_AUTO_INSTALL=localstack-extension-mailhog \
   --env DISABLE_CUSTOM_CORS_APIGATEWAY=1 \
+  --env EXTRA_CORS_ALLOWED_ORIGINS='*' \
   --env DISABLE_CUSTOM_CORS_S3=1
 )
 
