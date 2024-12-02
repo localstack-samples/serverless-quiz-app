@@ -40,7 +40,7 @@ Some of the features in this sample app require a LocalStack Pro license - make 
 Start your LocalStack container with the following configuration:
 
 ```bash
-EXTRA_CORS_ALLOWED_ORIGINS='*' DISABLE_CUSTOM_CORS_APIGATEWAY=1 DISABLE_CUSTOM_CORS_S3=1 localstack start
+localstack start
 ```
 
 If you run into specific CORS issues, disable it using a [browser extension](https://webextension.org/listing/access-control.html).

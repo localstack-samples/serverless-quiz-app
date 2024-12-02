@@ -212,6 +212,33 @@ for ENDPOINT_INFO in "${ENDPOINTS[@]}"; do
       --type AWS_PROXY \
       --integration-http-method POST \
       --uri arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:000000000000:function:${FUNCTION_NAME}/invocations >/dev/null
+
+  awslocal apigateway put-method \
+      --rest-api-id $API_ID \
+      --resource-id $RESOURCE_ID \
+      --http-method OPTIONS \
+      --authorization-type "NONE" >/dev/null
+
+  awslocal apigateway put-integration \
+      --rest-api-id $API_ID \
+      --resource-id $RESOURCE_ID \
+      --http-method OPTIONS \
+      --type MOCK \
+      --request-templates '{ "application/json": "{\"statusCode\": 200}" }' >/dev/null
+
+  awslocal apigateway put-method-response \
+      --rest-api-id $API_ID \
+      --resource-id $RESOURCE_ID \
+      --http-method OPTIONS \
+      --status-code 204 \
+      --response-parameters "method.response.header.Access-Control-Allow-Headers=true,method.response.header.Access-Control-Allow-Origin=true,method.response.header.Access-Control-Allow-Methods=true" >/dev/null
+
+  awslocal apigateway put-integration-response \
+      --rest-api-id $API_ID \
+      --resource-id $RESOURCE_ID \
+      --http-method OPTIONS \
+      --status-code 204 \
+      --response-parameters "{\"method.response.header.Access-Control-Allow-Headers\": \"'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'\", \"method.response.header.Access-Control-Allow-Origin\": \"'*'\", \"method.response.header.Access-Control-Allow-Methods\": \"'OPTIONS,$HTTP_METHOD'\"}" >/dev/null
 done
 log "API endpoints set up successfully."
 

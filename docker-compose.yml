@@ -13,9 +13,6 @@ services:
       - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN:?}  # required for Pro
       # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
       - DEBUG=${DEBUG:-0}
-      - EXTRA_CORS_ALLOWED_ORIGINS='*'
-      - DISABLE_CUSTOM_CORS_APIGATEWAY=1 
-      - DISABLE_CUSTOM_CORS_S3=1
       # To setup the LocalStack Extensions
       - EXTENSION_AUTO_INSTALL=localstack-extension-event-studio, localstack-extension-mailhog
     volumes:
