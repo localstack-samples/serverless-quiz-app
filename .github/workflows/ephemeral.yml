@@ -39,7 +39,9 @@ jobs:
       - name: Run Ephemeral Script and Capture Output
         run: |
           pip3 install localstack
-          OUTPUT=$(bash bin/ephemeral.sh 2>&1)
+          bash bin/ephemeral.sh 2>&1 | tee output.log
+
+          OUTPUT=$(cat output.log)
           echo "$OUTPUT"
           NEW_URL=$(echo "$OUTPUT" | grep -Eo 'https://ls-[^ ]+')
           
