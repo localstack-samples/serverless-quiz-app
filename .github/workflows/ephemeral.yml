@@ -56,3 +56,37 @@ jobs:
           echo "NEW_URL=$NEW_URL" >> $GITHUB_ENV
         env:
           LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
+
+      - name: Generate index.html with New Redirect URL
+        run: |
+          NEW_URL="${{ env.NEW_URL }}"
+          
+          # Validate the URL
+          if [[ ! "$NEW_URL" =~ ^https?:// ]]; then
+            echo "Error: Invalid URL provided."
+            exit 1
+          fi
+          
+          echo "Redirecting to: $NEW_URL"
+          
+          cat > index.html <<EOL
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta http-equiv="refresh" content="0; URL=${NEW_URL}">
+              <title>Redirecting...</title>
+          </head>
+          <body>
+              <p>If you are not redirected automatically, follow this <a href="${NEW_URL}">link</a>.</p>
+          </body>
+          </html>
+          EOL
+      - name: Switch to gh-pages Branch and Commit Changes
+        run: |
+          git fetch origin gh-pages || echo "gh-pages branch does not exist; creating it."
+          git checkout gh-pages || git checkout --orphan gh-pages
+          git rm -rf .  # Remove all files in the branch
+          git add index.html
+          git commit -m "Update redirect to ${NEW_URL}"
+          git push origin gh-pages --force
