@@ -44,7 +44,6 @@ jobs:
           bash bin/ephemeral.sh 2>&1 | tee output.log
 
           OUTPUT=$(cat output.log)
-          echo "$OUTPUT"
           NEW_URL=$(echo "$OUTPUT" | grep -Eo 'https://ls-[^ ]+')
           
           if [ -z "$NEW_URL" ]; then
