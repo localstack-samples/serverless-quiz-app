@@ -54,6 +54,9 @@ jobs:
       - name: Deploy using CDK
         run: |
           cd cdk
+          export AWS_ACCESS_KEY_ID="test"
+          export AWS_SECRET_ACCESS_KEY="test"
+          export AWS_DEFAULT_REGION="us-east-1"
           cdklocal bootstrap
           cd ..
           AWS_CMD=awslocal CDK_CMD=cdklocal bash ./bin/deploy_cdk.sh
