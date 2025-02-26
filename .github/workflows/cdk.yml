@@ -33,7 +33,7 @@ jobs:
           cdklocal --version
 
       - name: Start LocalStack
-        uses: LocalStack/setup-localstack@v0.2.3
+        uses: LocalStack/setup-localstack@main
         with:
           image-tag: 'latest'
           use-pro: 'true'
