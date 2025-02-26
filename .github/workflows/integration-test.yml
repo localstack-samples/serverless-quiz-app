@@ -43,7 +43,7 @@ jobs:
           pip install requests boto3 pytest localstack-sdk-python
 
       - name: Start LocalStack
-        uses: LocalStack/setup-localstack@main
+        uses: LocalStack/setup-localstack@v0.2.3
         with:
           image-tag: 'latest'
           use-pro: 'true'
