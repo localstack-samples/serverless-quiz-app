@@ -172,7 +172,9 @@ Toggle **Enforce IAM Policies** to enable strict IAM enforcement. For demo purpo
 
 Engage with the application or run tests to generate a policy stream for various services. During this process, you may notice some **IAM Violations**. These are intentionally included to demonstrate how the IAM Policy Stream can be used to test policies in a secure developer setting, helping to identify and resolve missing policies to ensure everything works in production environments.
 
-Find the missing policy statements and fix the IAM Policy on the [IAM Resource Browser](https://app.localstack.cloud/inst/default/resources/iam/roles) (for `SubmitQuizRole`) or patch it locally and update the policy using AWS CLI.
+Find the missing policy statements and fix the IAM Policy on the [IAM Resource Browser](https://app.localstack.cloud/inst/default/resources/iam/roles) (for `SubmitQuizRole`) or patch it locally and update the policy using AWS CLI. 
+
+Here is a [tutorial](https://blog.localstack.cloud/generating-testing-iam-policies-locally-with-localstack/) showcasing how you can do the above!
 
 ## Chaos Engineering
 
