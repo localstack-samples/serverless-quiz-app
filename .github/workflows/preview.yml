@@ -31,4 +31,4 @@ jobs:
             distributionId=$(awslocal cloudfront list-distributions | jq -r '.DistributionList.Items[0].Id');
             echo LS_PREVIEW_URL=$AWS_ENDPOINT_URL/cloudfront/$distributionId/ >> $GITHUB_ENV;
         env:
-          LOCALSTACK_API_KEY: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
