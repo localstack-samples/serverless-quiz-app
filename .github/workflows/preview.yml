@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 20
       - name: LocalStack Preview
-        uses: LocalStack/setup-localstack@debug-action
+        uses: LocalStack/setup-localstack@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           state-backend: ephemeral
