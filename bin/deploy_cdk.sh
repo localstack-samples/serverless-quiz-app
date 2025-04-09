@@ -15,6 +15,11 @@ if [ ! -d frontend/build ]; then
     )
 fi
 
+# bootstrap the stack
+(cd cdk
+npm run ${CDK_CMD} bootstrap
+)
+
 # deploy bulk of the application
 (cd cdk
 npm run ${CDK_CMD} -- deploy --require-approval never QuizAppStack

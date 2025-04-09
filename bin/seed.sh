@@ -25,7 +25,7 @@ if [ -z "$API_ID" ]; then
     exit 1
 fi
 
-API_ENDPOINT="$AWS_ENDPOINT_URL/_aws/execute-api/$API_ID/test"
+API_ENDPOINT="$AWS_ENDPOINT_URL/_aws/execute-api/$API_ID/prod"
 
 create_quiz() {
     local quiz_data=$1

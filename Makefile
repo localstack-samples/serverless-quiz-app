@@ -5,6 +5,9 @@ usage:		    ## Show usage for this Makefile
 deploy:         ## Deploy the application to LocalStack
 	bin/deploy.sh
 
+deploy-cdk:     ## Deploy the application to LocalStack via CDK
+	AWS_CMD=awslocal CDK_CMD=cdklocal bin/deploy_cdk.sh
+
 web:            ## Open the Web app in the browser (after the app is deployed)
 	DOMAIN_NAME=$$(awslocal cloudfront list-distributions | jq -r '.DistributionList.Items[0].DomainName'); \
 	    echo "CloudFront URL: https://$$DOMAIN_NAME"; \
