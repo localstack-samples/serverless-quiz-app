@@ -5,12 +5,15 @@ import localstack.sdk.aws
 import json
 import time
 
+API_NAME = 'QuizAPI'
+STAGE_NAME = "prod"
+
+
 @pytest.fixture(scope='module')
 def api_endpoint():
     apigateway_client = boto3.client('apigateway', endpoint_url='http://localhost:4566')
     lambda_client = boto3.client('lambda', endpoint_url='http://localhost:4566')
 
-    API_NAME = 'QuizAPI'
     response = apigateway_client.get_rest_apis()
     api_list = response.get('items', [])
     api = next((item for item in api_list if item['name'] == API_NAME), None)
@@ -19,7 +22,7 @@ def api_endpoint():
         raise Exception(f"API {API_NAME} not found.")
 
     API_ID = api['id']
-    API_ENDPOINT = f"http://localhost:4566/_aws/execute-api/{API_ID}/prod"
+    API_ENDPOINT = f"http://localhost:4566/_aws/execute-api/{API_ID}/{STAGE_NAME}"
 
     print(f"API Endpoint: {API_ENDPOINT}")
 

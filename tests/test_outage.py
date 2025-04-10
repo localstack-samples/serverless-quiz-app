@@ -9,7 +9,8 @@ from localstack.sdk.models import FaultRule
 from localstack.sdk.chaos.managers import fault_configuration
 
 LOCALSTACK_ENDPOINT = "http://localhost.localstack.cloud:4566"
-API_NAME = 'QuizAPI'
+API_NAME = "QuizAPI"
+STAGE_NAME = "prod"
 
 class TestLocalStackClient:
     client = localstack.sdk.chaos.ChaosClient()
@@ -28,7 +29,7 @@ def api_endpoint(apigateway_client):
         raise Exception(f"API {API_NAME} not found.")
 
     API_ID = api['id']
-    API_ENDPOINT = f"{LOCALSTACK_ENDPOINT}/_aws/execute-api/{API_ID}/test"
+    API_ENDPOINT = f"{LOCALSTACK_ENDPOINT}/_aws/execute-api/{API_ID}/{STAGE_NAME}"
 
     print(f"API Endpoint: {API_ENDPOINT}")
 
