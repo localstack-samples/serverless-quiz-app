@@ -47,7 +47,7 @@ jobs:
         with:
           image-tag: 'latest'
           use-pro: 'true'
-          configuration: LS_LOG=trace
+          # configuration: LS_LOG=trace
           install-awslocal: 'true'
         env:
           LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
