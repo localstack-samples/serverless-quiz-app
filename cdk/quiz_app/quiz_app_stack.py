@@ -262,6 +262,7 @@ class QuizAppStack(Stack):
                 "../configurations/statemachine.json"
             ),
             role=state_machine_role,
+            state_machine_name="SendEmailStateMachine"
         )
 
         # set up lambda permissions
