@@ -47,7 +47,7 @@ jobs:
         with:
           image-tag: 'latest'
           use-pro: 'true'
-          # configuration: LS_LOG=trace
+          configuration: LS_LOG=trace
           install-awslocal: 'true'
         env:
           LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
@@ -56,14 +56,14 @@ jobs:
         run: |
           ./bin/deploy.sh
 
-      # - name: Run Integration Tests
-      #   env:
-      #     AWS_DEFAULT_REGION: us-east-1
-      #     AWS_REGION: us-east-1
-      #     AWS_ACCESS_KEY_ID: test
-      #     AWS_SECRET_ACCESS_KEY: test
-      #   run: |
-      #     pytest tests/test_infra.py
+      - name: Run Integration Tests
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        run: |
+          pytest tests/test_infra.py
 
       - name: Run Outages Tests
         env:
