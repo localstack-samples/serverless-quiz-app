@@ -156,9 +156,9 @@ def test_quiz_workflow(api_endpoint):
 
     time.sleep(5)
 
-    leaderboard = f"{api_endpoint}/getleaderboard?quiz_id={quiz_id}&top=3"
-    print(leaderboard)
-    response = requests.get(leaderboard)
+    leaderboard_url = f"{api_endpoint}/getleaderboard?quiz_id={quiz_id}&top=3"
+    print(leaderboard_url)
+    response = requests.get(leaderboard_url)
 
     if response.json():
         assert response.status_code == 200
@@ -170,12 +170,15 @@ def test_quiz_workflow(api_endpoint):
         # TODO: This is a hack to get around the fact that the leaderboard is not available immediately.
         for _ in range(3):
             time.sleep(2)
-            response = requests.get(leaderboard)
+            response = requests.get(leaderboard_url)
             if response.json():
                 assert response.status_code == 200
                 leaderboard = response.json()
                 print(leaderboard)
+            else:
+                assert False, "Leaderboard is empty"
 
+    print(leaderboard)
     expected_scores = {
         "user1": None,
         "user2": None,
