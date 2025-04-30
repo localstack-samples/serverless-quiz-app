@@ -158,7 +158,7 @@ class QuizAppStack(Stack):
         self.backend_api_url = rest_api.url
 
         # verify email identity for SES
-        for email in ["your.email@example.com", "admin@localstack.cloud"]:
+        for email in ["your.email@example.com", "admin@localstack.cloud", "sender@example.com"]:
             sanitised_email = email.replace(".", "-").replace("@", "-")
             cr.AwsCustomResource(
                 self,
