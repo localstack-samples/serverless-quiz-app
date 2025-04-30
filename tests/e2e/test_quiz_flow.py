@@ -90,31 +90,55 @@ def test_quiz_flow(page, app_url):
     if score_element:
         print(f"Found score element: {score_element.text_content()}")
     
-    # Click View Leaderboard if available
-    try:
-        leaderboard_button = page.get_by_text("View Leaderboard")
-        if leaderboard_button.is_visible():
-            print("Clicking leaderboard button...")
-            leaderboard_button.click()
-            
-            # Verify leaderboard loaded
-            expect(page.get_by_text("Leaderboard")).to_be_visible()
-            
-            # Verify our user appears in the leaderboard
-            print("Checking leaderboard entries...")
-            leaderboard_entries = page.get_by_role("row")
-            found_user = False
-            for entry in leaderboard_entries.all():
-                content = entry.text_content()
-                print(f"Leaderboard entry: {content}")
-                if username in content.lower():
-                    found_user = True
-                    break
-            
-            assert found_user, "User not found in leaderboard"
-    except Exception as e:
-        print(f"Error accessing leaderboard: {str(e)}")
-        page.screenshot(path="leaderboard-error.png")
+    # Click View Leaderboard
+    print("Clicking leaderboard button...")
+    leaderboard_button = page.get_by_text("View Leaderboard")
+    expect(leaderboard_button).to_be_visible()
+    leaderboard_button.click()
+    time.sleep(10)
+    
+    # Verify leaderboard loaded
+    print("Verifying leaderboard...")
+    expect(page.get_by_text("LEADERBOARD")).to_be_visible()
+    
+    # Check both podium and list views for the username
+    print("Checking leaderboard entries...")
+    found_user = False
+    
+    # Check podium entries
+    podium_entries = page.locator('.podium h5').all()
+    for entry in podium_entries:
+        content = entry.text_content()
+        print(f"Podium entry: {content}")
+        if username in content:
+            found_user = True
+            break
+    
+    # If not found in podium, check list entries
+    if not found_user:
+        list_entries = page.locator('.MuiListItemText-primary').all()
+        for entry in list_entries:
+            content = entry.text_content()
+            print(f"List entry: {content}")
+            if username in content:
+                found_user = True
+                break
+    
+    # Take screenshot for debugging
+    if not found_user:
+        print("Taking screenshot for debugging...")
+        page.screenshot(path="leaderboard-debug.png")
+        
+        # Print all entries for debugging
+        print("\nAll podium entries:")
+        for entry in podium_entries:
+            print(entry.text_content())
+        print("\nAll list entries:")
+        for entry in list_entries:
+            print(entry.text_content())
+        print(f"\nLooking for username: {username}")
+    
+    assert found_user, "User not found in leaderboard"
 
 def test_quiz_creation(page, app_url):
     print("\nStarting quiz creation test...")
