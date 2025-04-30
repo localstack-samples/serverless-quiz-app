@@ -44,6 +44,8 @@ def test_dynamodb_outage(api_endpoint):
     with fault_configuration(fault_rules=[outage_rule]):
         print("DynamoDB outage initiated within context.")
 
+        time.sleep(2) # Add a 2-second delay
+
         # Attempt to create a quiz during the outage
         create_quiz_payload = {
             "Title": "Outage Test Quiz",
