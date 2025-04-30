@@ -1,0 +1,4 @@
+pytest
+playwright
+boto3
+pytest-playwright
