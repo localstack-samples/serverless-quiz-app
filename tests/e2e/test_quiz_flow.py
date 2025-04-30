@@ -124,20 +124,6 @@ def test_quiz_flow(page, app_url):
                 found_user = True
                 break
     
-    # Take screenshot for debugging
-    if not found_user:
-        print("Taking screenshot for debugging...")
-        page.screenshot(path="leaderboard-debug.png")
-        
-        # Print all entries for debugging
-        print("\nAll podium entries:")
-        for entry in podium_entries:
-            print(entry.text_content())
-        print("\nAll list entries:")
-        for entry in list_entries:
-            print(entry.text_content())
-        print(f"\nLooking for username: {username}")
-    
     assert found_user, "User not found in leaderboard"
 
 def test_quiz_creation(page, app_url):
