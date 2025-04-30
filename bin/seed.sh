@@ -322,3 +322,13 @@ answers=$(cat <<EOF
 EOF
 )
 submit_quiz_response "galacticExplorer" "$STAR_WARS_QUIZ_ID"
+
+# Query leaderboard and show them in a nice format
+log "Leaderboard:"
+
+# Get leaderboard for each quiz
+for quiz_id in "$COMIC_BOOK_QUIZ_ID" "$AWS_QUIZ_ID" "$STAR_WARS_QUIZ_ID"; do
+    log "Leaderboard for Quiz ID: $quiz_id"
+    leaderboard=$(curl -s "$API_ENDPOINT/getleaderboard?quiz_id=$quiz_id&top=3")
+    echo "$leaderboard"
+done
