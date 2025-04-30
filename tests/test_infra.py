@@ -157,8 +157,11 @@ def test_quiz_workflow(api_endpoint):
     time.sleep(5)
 
     response = requests.get(f"{api_endpoint}/getleaderboard?quiz_id={quiz_id}&top=3")
+    print(f"{api_endpoint}/getleaderboard?quiz_id={quiz_id}&top=3")
+    print(response)
     assert response.status_code == 200
     leaderboard = response.json()
+    print(leaderboard)
     assert len(leaderboard) == 3
 
     expected_scores = {

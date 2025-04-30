@@ -68,6 +68,10 @@ jobs:
           awslocal dynamodb list-tables
           awslocal s3 ls
 
+      - name: Run Integration Tests
+        run: |
+          pytest tests/test_infra.py
+
       - name: Send a Slack notification
         if: failure() || github.event_name != 'pull_request'
         uses: ravsamhq/notify-slack-action@v2
