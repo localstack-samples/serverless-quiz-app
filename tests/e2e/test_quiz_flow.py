@@ -9,8 +9,7 @@ import string
 @pytest.fixture(scope="session")
 def browser():
     with sync_playwright() as p:
-        # Launch browser in headed mode for debugging
-        browser = p.chromium.launch(headless=False, slow_mo=1000)
+        browser = p.chromium.launch(headless=True, slow_mo=1000)
         yield browser
         browser.close()
 
@@ -23,7 +22,6 @@ def page(browser):
 
 @pytest.fixture(scope="session")
 def app_url():
-    # Use boto3 to get the CloudFront distribution ID
     cloudfront = boto3.client('cloudfront', endpoint_url='http://localhost:4566')
     response = cloudfront.list_distributions()
     distribution_id = response['DistributionList']['Items'][0]['Id']
@@ -31,14 +29,11 @@ def app_url():
 
 def test_quiz_flow(page, app_url):
     # Enable verbose logging
-    page.set_viewport_size({"width": 1280, "height": 720})
-    
-    # Navigate to the home page
+    # page.set_viewport_size({"width": 1280, "height": 720})
+
+    # Navigate to home page
     print("\nNavigating to home page...")
     page.goto(app_url)
-    
-    # Verify the home page loaded
-    print("Verifying home page...")
     expect(page.get_by_text("Welcome")).to_be_visible()
     
     # Select AWS Quiz from public quizzes
@@ -55,8 +50,6 @@ def test_quiz_flow(page, app_url):
     print("Filling in user details...")
     username_input = page.get_by_label("Username")
     username_input.fill(username)
-    
-    # Optional: Fill in email
     email_input = page.get_by_label("Email (Optional)")
     email_input.fill(email)
     
@@ -90,41 +83,8 @@ def test_quiz_flow(page, app_url):
         answer_radio.click()
         
         # Wait for next question or submit button
-        time.sleep(2)  # Increased delay to ensure state updates
-    
-    # After last question, verify we're on the results page
-    print("Waiting for results page...")
-    
-    # Take a screenshot for debugging
-    page.screenshot(path="results-page.png")
-    
-    # Print current page content for debugging
-    print("\nPage content after quiz completion:")
-    print(page.content())
-    
-    # Try different selectors for the results
-    selectors = [
-        "text=Processing your submission...",
-        "text=Your Score",
-        "text=Quiz Results",
-        ".main-quiz-container",  # Try container class
-        "[data-testid=results-page]"  # Try test ID if available
-    ]
-    
-    for selector in selectors:
-        try:
-            print(f"\nTrying to find: {selector}")
-            element = page.wait_for_selector(selector, timeout=5000)
-            if element:
-                print(f"Found element with selector: {selector}")
-                break
-        except Exception as e:
-            print(f"Selector {selector} not found: {str(e)}")
-    
-    # Wait longer for results processing
-    print("Waiting for results to process...")
-    time.sleep(5)  # Give more time for backend processing
-    
+        time.sleep(2)
+
     # Try to find score text with a more flexible approach
     score_element = page.get_by_text("Score", exact=False)
     if score_element:
@@ -158,6 +118,7 @@ def test_quiz_flow(page, app_url):
 
 def test_quiz_creation(page, app_url):
     print("\nStarting quiz creation test...")
+
     # Navigate to home page
     print("Navigating to home page...")
     page.goto(app_url)
@@ -189,7 +150,7 @@ def test_quiz_creation(page, app_url):
         option_input = page.get_by_role("textbox", name=f"Option {i + 1}")
         option_input.fill(option)
     
-    # Add trivia (if required)
+    # Add trivia
     print("Adding trivia...")
     trivia_input = page.get_by_role("textbox", name="Trivia")
     trivia_input.fill("LocalStack is a cloud service emulator that runs in a single container on your laptop.")
